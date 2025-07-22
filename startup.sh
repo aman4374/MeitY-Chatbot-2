@@ -1,2 +1,2 @@
 #!/bin/bash
-streamlit run app.py --server.port $PORT --server.headless true
+streamlit run app.py --server.address 0.0.0.0 --server.port 8000
