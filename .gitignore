@@ -1,0 +1,32 @@
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# FAISS/Chroma persistent storage
+persistent_storage/chroma_golden_faiss/
+persistent_storage/chroma_scraped_faiss/
+persistent_storage/faiss_video/
+
+# Uploaded and scraped files
+uploads/
+scraped_data/
+video_upload/
+
+# Logs (if any)
+*.log
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
