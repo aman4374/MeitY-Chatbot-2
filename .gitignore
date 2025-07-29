@@ -1,0 +1,18 @@
+# Python virtual environment and cache
+venv/
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+
+# Persistent data and knowledge base
+# These should be built and uploaded to Azure manually, not stored in Git
+persistent_storage/
+source_documents/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

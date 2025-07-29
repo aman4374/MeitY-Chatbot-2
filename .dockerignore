@@ -1,0 +1,20 @@
+# Git and GitHub files
+.git
+.gitignore
+.github
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Python virtual environment and cache
+venv
+__pycache__
+
+# Local secrets and development files
+.env
+build_knowledge_base.py
+source_documents/
+
+# The data itself, which will be mounted from Azure Files
+persistent_storage/
