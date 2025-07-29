@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: meity-chatbot-app                 # The name of your Azure App Service
-  AZURE_CONTAINER_REGISTRY: meitychatbotregistry.azurecr.io # Your ACR login server
+  AZURE_WEBAPP_NAME: meity-chatbot-app2                # The name of your Azure App Service
+  AZURE_CONTAINER_REGISTRY: meitychatbotregistry2.azurecr.io # Your ACR login server
   IMAGE_NAME: chatbot-app                              # The name of your container image
 
 jobs:
