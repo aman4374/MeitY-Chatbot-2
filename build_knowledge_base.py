@@ -15,11 +15,10 @@ from playwright.sync_api import sync_playwright
 # --- 1. CONFIGURATION ---
 SOURCE_DOCS_DIR = "source_documents"
 URLS_TO_SCRAPE = [
-    "https://www.meity.gov.in/",
-    "https://github.com/aman4374/MeitY-Chatbot-"
+    
 ]
 YOUTUBE_URLS = [
-    "https://www.youtube.com/@meityindia/videos"
+    
 ]
 
 # --- PATHS ---
