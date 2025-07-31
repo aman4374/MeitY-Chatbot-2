@@ -151,7 +151,7 @@ Context:
 Question: {query}
 Answer:"""
 
-    llm = ChatTogether(model="mistralai/Mistral-7B-Instruct-v0.2", temperature=0.2)
+    llm = ChatTogether(model="mistralai/Mistral-7B-Instruct-v0.2", temperature=0.4)
     response = llm.invoke(prompt)
     answer_text = response.content.strip() if isinstance(response, AIMessage) else str(response).strip()
 
