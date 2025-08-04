@@ -112,8 +112,11 @@ DOC_FAISS_PATH = os.path.join(PERSISTENT_DIR, "doc_faiss_index")
 SCRAPED_FAISS_PATH = os.path.join(PERSISTENT_DIR, "scraped_faiss_index")
 YOUTUBE_FAISS_PATH = os.path.join(PERSISTENT_DIR, "youtube_faiss_index")
 
+# In backend/qa_chain.py
+
 def search_vectorstore(index_path, query, embeddings):
     """Loads a FAISS index and searches for relevant documents with retry logic."""
+    
     max_retries = 3
     retry_delay = 2 # seconds
     for attempt in range(max_retries):
@@ -127,24 +130,32 @@ def search_vectorstore(index_path, query, embeddings):
         return None
     
     vectordb = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
-    results = vectordb.similarity_search_with_score(query, k=4)
-    threshold = 1.2
-    relevant_docs = [doc for doc, score in results if score < threshold]
+    
+    # --- MODIFIED: Using relevance scores ---
+    # Fetch 5 documents (k=5) and filter for a relevance score greater than 0.8
+    results = vectordb.similarity_search_with_relevance_scores(query, k=5)
+    
+    threshold = 0.8
+    relevant_docs = [doc for doc, score in results if score > threshold]
+    # --- END MODIFICATION ---
+
     return relevant_docs if relevant_docs else None
 
 # --- MODIFIED: ask_llm now returns the raw text ---
-def ask_llm(query: str, context: str) -> tuple[bool, str]:
+def ask_llm(query: str, context: str, source: str) -> tuple[bool, str]:
     """
     Sends the query to the LLM and analyzes the response.
-    Returns a tuple: (was_answer_found, raw_answer_text)
+    Returns a tuple: (was_answer_found, formatted_response_string)
     """
-    prompt = f"""You are an expert assistant. Use only the provided context to answer the question concisely. If the context contains URLs, you must cite them at the end of your answer. If the context does not contain the answer, you must say "I do not have enough information to answer that."
+    # --- MODIFIED PROMPT ---
+    prompt = f"""You are a precise and careful expert assistant. Use only the provided context to answer the question. Pay close attention to specific names, titles, and entities in the question. If the provided context is only about the general topic of the question and does not mention the specific entities, you must say "I do not have enough information to answer that." If the context contains URLs, you must cite them at the end of your answer.
 
 Context:
 {context}
 
 Question: {query}
 Answer:"""
+    # --- END MODIFICATION ---
 
     llm = ChatTogether(model="mistralai/Mistral-7B-Instruct-v0.2", temperature=0.2)
     response = llm.invoke(prompt)
@@ -164,33 +175,44 @@ Answer:"""
 # --- MODIFIED: get_answer now handles all response formatting ---
 def get_answer(query: str) -> str:
     """Answers a query using an intelligent tiered search."""
-    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = SentenceTransformerEmbeddings(model_name="BAAI/bge-large-en-v1.5")
     
-    source_answer_map = {
-        DOC_FAISS_PATH: "📄 Answer (from documents)",
-        SCRAPED_FAISS_PATH: "🌐 Answer (from scraped websites)",
-        YOUTUBE_FAISS_PATH: "🎬 Answer (from YouTube videos)"
-    }
+    # Tier 1: Local Documents (Golden Data)
+    print("Checking 📄 Documents...")
+    docs = search_vectorstore(DOC_FAISS_PATH, query, embeddings)
+    if docs:
+        context = "\n\n".join([doc.page_content for doc in docs])
+        success, answer = ask_llm(query, context, source="📄 Answer (from documents)")
+        if success:
+            return answer
 
-    for index_path, source_text in source_answer_map.items():
-        print(f"Checking {source_text}...")
-        docs = search_vectorstore(index_path, query, embeddings)
-        if docs:
-            context = "\n\n".join([doc.page_content for doc in docs])
-            success, answer_text = ask_llm(query, context)
-            if success:
-                # Format the successful response here
-                return f"{source_text}:\n{answer_text}"
+    # Tier 2: Scraped Websites
+    print("Checking 🌐 Scraped Websites...")
+    docs = search_vectorstore(SCRAPED_FAISS_PATH, query, embeddings)
+    if docs:
+        context = "\n\n".join([doc.page_content for doc in docs])
+        success, answer = ask_llm(query, context, source="🌐 Answer (from scraped websites)")
+        if success:
+            return answer
 
-    # Fallback to Internet Search
+    # Tier 3: YouTube Transcripts
+    print("Checking 🎬 YouTube Videos...")
+    docs = search_vectorstore(YOUTUBE_FAISS_PATH, query, embeddings)
+    if docs:
+        context = "\n\n".join([doc.page_content for doc in docs])
+        success, answer = ask_llm(query, context, source="🎬 Answer (from YouTube videos)")
+        if success:
+            return answer
+
+    # Tier 4 Fallback
     try:
         print("🔍 No relevant info found in any local source. Falling back to Internet...")
         web_results = search_tavily(query)
         if web_results:
             web_context = "\n\n".join([f"Source: {res['url']}\nContent: {res['content']}" for res in web_results])
-            # We don't need the 'success' flag here as it's the final step
-            _, answer_text = ask_llm(query, web_context)
-            return f"🌐 Answer (via Internet):\n{answer_text}"
+            # --- THIS LINE IS FIXED ---
+            _, answer = ask_llm(query, web_context, source="🌐 Answer (via Internet)")
+            return answer
         else:
             return "❌ Could not find an answer from the internet."
     except Exception as e:
