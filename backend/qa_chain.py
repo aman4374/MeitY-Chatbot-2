@@ -184,13 +184,13 @@ Answer:"""
     return {"answer": answer_text, "source_documents": context_docs}
 
 
+# In backend/qa_chain.py
+
 def get_answer(query: str) -> dict:
     """
     Answers a query using tiered search and returns a dictionary
     containing the answer and a list of source documents.
     """
-    # --- MODIFIED: This function is now cleaner and correctly handles the return ---
-    
     # Tier 1: Local Documents
     print("🔍 Checking 📄 Local Documents...")
     doc_sources = search_vectorstore(DOC_FAISS_PATH, query)
@@ -215,13 +215,16 @@ def get_answer(query: str) -> dict:
         if result:
             return result
 
-    # Tier 4: Fallback to Internet Search
+    # --- MODIFIED: Tier 4 Fallback now correctly returns sources ---
     try:
         print("🌐 No relevant info found. Falling back to Internet...")
         web_results = search_tavily(query)
         if web_results:
+            # Create LangChain Document objects from web results
             web_docs = [Document(page_content=res['content'], metadata={'source': res['url']}) for res in web_results]
-            # We call ask_llm here to get the final summarized answer and sources
+            
+            # Pass these documents to the LLM and return the result directly
+            # The ask_llm function will package the answer and sources together
             return ask_llm(query, web_docs)
         else:
             return {"answer": "Could not find a relevant answer from the knowledge base or the internet.", "source_documents": []}
