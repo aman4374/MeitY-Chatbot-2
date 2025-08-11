@@ -228,35 +228,26 @@ if st.session_state.latest_response:
     st.write(response_data.get("answer", "No answer generated."))
 
     source_docs = response_data.get("source_documents", [])
-   # In app.py
-
-# --- Show Response ---
-if st.session_state.latest_response:
-    st.markdown("---")
-    st.markdown(f"### Question:\n> {st.session_state.latest_query}")
-    
-    response_data = st.session_state.latest_response
-    st.markdown("### Answer:")
-    st.write(response_data.get("answer", "No answer generated."))
-
-    source_docs = response_data.get("source_documents", [])
     if source_docs:
         st.markdown("### References:")
         
         # Get the base path for persistent storage from environment variables
+        # This will be '/persistent_storage' on Azure and 'persistent_storage' locally
         PERSISTENT_DIR = os.environ.get("PERSISTENT_STORAGE_PATH", "persistent_storage")
 
         for i, doc in enumerate(source_docs[:5]):
             source = doc.metadata.get("source", "Unknown Source")
-            is_local_doc = 'source_documents' in source # Check if it's a local document path
+            
+            # Check if the source is a local document path
+            is_local_doc = 'source_documents' in source.replace('\\', '/')
 
             # Create a clean display name
             filename = os.path.basename(source)
             
-            # --- MODIFIED LOGIC ---
-            # If it's a local document, construct the full path inside the Azure mount
+            # --- MODIFIED LOGIC TO HANDLE AZURE PATHS ---
             if is_local_doc:
-                # The path inside the container will be /persistent_storage/source_documents/filename.pdf
+                # Construct the full path to the file within the mounted storage on Azure
+                # Example: /persistent_storage/source_documents/report.pdf
                 azure_file_path = os.path.join(PERSISTENT_DIR, source)
                 
                 if os.path.exists(azure_file_path):
@@ -270,8 +261,8 @@ if st.session_state.latest_response:
                         key=f"file_{i}"
                     )
                 else:
-                    # If file is not found even on Azure, just show the name
-                    st.markdown(f"[{i+1}]: {filename} (Source file not found in storage)")
+                    # Fallback if the file is not found in the Azure storage
+                    st.markdown(f"[{i+1}]: {filename} (Source file not available for download)")
             
-            else: # It's a URL for scraped or YouTube content
+            else:  # It's a URL for scraped or YouTube content
                 st.markdown(f"[{i+1}]: [{filename}]({source})")
