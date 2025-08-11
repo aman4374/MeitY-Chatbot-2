@@ -228,20 +228,50 @@ if st.session_state.latest_response:
     st.write(response_data.get("answer", "No answer generated."))
 
     source_docs = response_data.get("source_documents", [])
+   # In app.py
+
+# --- Show Response ---
+if st.session_state.latest_response:
+    st.markdown("---")
+    st.markdown(f"### Question:\n> {st.session_state.latest_query}")
+    
+    response_data = st.session_state.latest_response
+    st.markdown("### Answer:")
+    st.write(response_data.get("answer", "No answer generated."))
+
+    source_docs = response_data.get("source_documents", [])
     if source_docs:
         st.markdown("### References:")
+        
+        # Get the base path for persistent storage from environment variables
+        PERSISTENT_DIR = os.environ.get("PERSISTENT_STORAGE_PATH", "persistent_storage")
+
         for i, doc in enumerate(source_docs[:5]):
             source = doc.metadata.get("source", "Unknown Source")
-            filename = os.path.basename(source) if 'http' not in source else source.split('/')[-1]
+            is_local_doc = 'source_documents' in source # Check if it's a local document path
 
-            if os.path.exists(source):  # Local file
-                with open(source, "rb") as f:
-                    file_data = f.read()
-                st.download_button(
-                    label=f"[{i+1}]: Download {filename}",
-                    data=file_data,
-                    file_name=filename,
-                    key=f"file_{i}"
-                )
-            else:  # URL or unknown
+            # Create a clean display name
+            filename = os.path.basename(source)
+            
+            # --- MODIFIED LOGIC ---
+            # If it's a local document, construct the full path inside the Azure mount
+            if is_local_doc:
+                # The path inside the container will be /persistent_storage/source_documents/filename.pdf
+                azure_file_path = os.path.join(PERSISTENT_DIR, source)
+                
+                if os.path.exists(azure_file_path):
+                    with open(azure_file_path, "rb") as f:
+                        file_data = f.read()
+                    
+                    st.download_button(
+                        label=f"[{i+1}]: Download {filename}",
+                        data=file_data,
+                        file_name=filename,
+                        key=f"file_{i}"
+                    )
+                else:
+                    # If file is not found even on Azure, just show the name
+                    st.markdown(f"[{i+1}]: {filename} (Source file not found in storage)")
+            
+            else: # It's a URL for scraped or YouTube content
                 st.markdown(f"[{i+1}]: [{filename}]({source})")
