@@ -144,125 +144,602 @@
 
 
 
+# import streamlit as st
+# from dotenv import load_dotenv
+# import os
+# from backend.qa_chain import get_answer
+
+# # Load environment variables
+# load_dotenv()
+
+# # --- Streamlit Page Config ---
+# st.set_page_config(page_title="MeitY AI Agent", layout="wide")
+
+# # --- Custom CSS Styling ---
+# st.markdown("""
+# <style>
+#     .stApp { background-color: #1a1a2e; color: #e0e0e0; }
+#     [data-testid="stSidebar"] { background-color: #162447; }
+#     .stTextArea textarea { background-color: #2e2e48; color: #ffffff; border: 1px solid #4a4a6a; }
+#     .stButton button {
+#         background-color: #1f4068; color: #ffffff; border: 1px solid #1b263b;
+#     }
+#     .stButton button:hover {
+#         background-color: #2c5d91; border-color: #1b263b; color: #ffffff;
+#     }
+#     [data-testid="stChatMessage"] {
+#         background-color: #25253D;
+#         border-radius: 0.5rem;
+#         padding: 1rem;
+#     }
+# </style>
+# """, unsafe_allow_html=True)
+
+# # --- Sidebar ---
+# with st.sidebar:
+#     st.title("MeitY Knowledge Base AI Agent 💡")
+#     st.markdown("---")
+#     st.header("About")
+#     st.markdown("""
+#     This Generative AI Agent can answer queries based on documents, websites, and YouTube videos 
+#     related to the Ministry of Electronics and IT (MeitY), Government of India.
+#     """)
+#     st.markdown("---")
+#     st.header("Technologies Used")
+#     st.markdown("""
+#     - **LLM**: Together AI (Mistral)
+#     - **Framework**: LangChain
+#     - **Embeddings**: BAAI BGE
+#     - **Vector Store**: FAISS
+#     - **UI**: Streamlit
+#     - **Fallback**: Tavily Search API
+#     """)
+
+# # --- Main Page Title ---
+# st.markdown("""
+#     <h2 style='text-align: center;'>
+#         🗯️🇮🇳 MeitY Knowledge Base AI Agent
+#     </h2>
+# """, unsafe_allow_html=True)
+
+# # --- Session State ---
+# if "latest_query" not in st.session_state:
+#     st.session_state.latest_query = ""
+# if "latest_response" not in st.session_state:
+#     st.session_state.latest_response = None
+
+# # --- Query Form ---
+# with st.form("query_form"):
+#     query_text = st.text_area("Please enter your question here:", height=150)
+#     submitted = st.form_submit_button("Submit")
+
+# if submitted and query_text:
+#     st.session_state.latest_query = query_text
+#     with st.spinner("Generating answer..."):
+#         st.session_state.latest_response = get_answer(query_text)
+
+# # --- Show Response ---
+# if st.session_state.latest_response:
+#     st.markdown("---")
+#     st.markdown(f"### Question:\n> {st.session_state.latest_query}")
+    
+#     response_data = st.session_state.latest_response
+#     st.markdown("### Answer:")
+#     st.write(response_data.get("answer", "No answer generated."))
+
+#     source_docs = response_data.get("source_documents", [])
+#     if source_docs:
+#         st.markdown("### References:")
+        
+#         # Get the base path for persistent storage from environment variables
+#         # This will be '/persistent_storage' on Azure and 'persistent_storage' locally
+#         PERSISTENT_DIR = os.environ.get("PERSISTENT_STORAGE_PATH", "persistent_storage")
+
+#         for i, doc in enumerate(source_docs[:5]):
+#             source = doc.metadata.get("source", "Unknown Source")
+            
+#             # Check if the source is a local document path
+#             is_local_doc = 'source_documents' in source.replace('\\', '/')
+
+#             # Create a clean display name
+#             filename = os.path.basename(source)
+            
+#             # --- MODIFIED LOGIC TO HANDLE AZURE PATHS ---
+#             if is_local_doc:
+#                 # Construct the full path to the file within the mounted storage on Azure
+#                 # Example: /persistent_storage/source_documents/report.pdf
+#                 azure_file_path = os.path.join(PERSISTENT_DIR, source)
+                
+#                 if os.path.exists(azure_file_path):
+#                     with open(azure_file_path, "rb") as f:
+#                         file_data = f.read()
+                    
+#                     st.download_button(
+#                         label=f"[{i+1}]: Download {filename}",
+#                         data=file_data,
+#                         file_name=filename,
+#                         key=f"file_{i}"
+#                     )
+#                 else:
+#                     # Fallback if the file is not found in the Azure storage
+#                     st.markdown(f"[{i+1}]: {filename} (Source file not available for download)")
+            
+#             else:  # It's a URL for scraped or YouTube content
+#                 st.markdown(f"[{i+1}]: [{filename}]({source})")
+
+
+
 import streamlit as st
 from dotenv import load_dotenv
 import os
-from backend.qa_chain import get_answer
+import logging
+from datetime import datetime
+from backend.qa_chain import get_answer, health_check
 
 # Load environment variables
 load_dotenv()
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # --- Streamlit Page Config ---
-st.set_page_config(page_title="MeitY AI Agent", layout="wide")
+st.set_page_config(
+    page_title="MeitY AI Agent", 
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'About': "MeitY Knowledge Base AI Agent - Powered by RAG technology"
+    }
+)
 
 # --- Custom CSS Styling ---
 st.markdown("""
 <style>
-    .stApp { background-color: #1a1a2e; color: #e0e0e0; }
-    [data-testid="stSidebar"] { background-color: #162447; }
-    .stTextArea textarea { background-color: #2e2e48; color: #ffffff; border: 1px solid #4a4a6a; }
+    .stApp { 
+        background-color: #1a1a2e; 
+        color: #e0e0e0; 
+    }
+    
+    [data-testid="stSidebar"] { 
+        background-color: #162447; 
+        padding-top: 2rem;
+    }
+    
+    .stTextArea textarea { 
+        background-color: #2e2e48; 
+        color: #ffffff; 
+        border: 1px solid #4a4a6a;
+        border-radius: 10px;
+    }
+    
     .stButton button {
-        background-color: #1f4068; color: #ffffff; border: 1px solid #1b263b;
+        background-color: #1f4068; 
+        color: #ffffff; 
+        border: 1px solid #1b263b;
+        border-radius: 10px;
+        font-weight: bold;
+        transition: all 0.3s ease;
     }
+    
     .stButton button:hover {
-        background-color: #2c5d91; border-color: #1b263b; color: #ffffff;
+        background-color: #2c5d91; 
+        border-color: #1b263b; 
+        color: #ffffff;
+        transform: translateY(-2px);
     }
+    
     [data-testid="stChatMessage"] {
         background-color: #25253D;
-        border-radius: 0.5rem;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #1f4068;
+    }
+    
+    .source-card {
+        background-color: #2e2e48;
+        border-radius: 10px;
         padding: 1rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #4a90e2;
+    }
+    
+    .status-good {
+        color: #4CAF50;
+    }
+    
+    .status-bad {
+        color: #f44336;
+    }
+    
+    .query-stats {
+        background-color: #25253D;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        border: 1px solid #4a4a6a;
+    }
+    
+    .main-title {
+        text-align: center;
+        color: #4a90e2;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
 </style>
 """, unsafe_allow_html=True)
 
+# --- Helper Functions ---
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def get_system_health():
+    """Get and cache system health status"""
+    return health_check()
+
+def format_source_display(doc, index):
+    """Format source document for better display"""
+    source = doc.metadata.get('source', 'Unknown Source')
+    title = doc.metadata.get('title', '')
+    doc_type = doc.metadata.get('type', 'unknown')
+    tier = doc.metadata.get('tier', 'Unknown Tier')
+    
+    # Determine source type and format accordingly
+    if source.startswith('http'):
+        source_type = "🌐 Web"
+        display_name = source.split('/')[-1] or source
+        if len(display_name) > 50:
+            display_name = display_name[:47] + "..."
+    elif os.path.exists(source):
+        source_type = "📄 Document"
+        display_name = os.path.basename(source)
+    elif 'youtube' in source.lower() or 'youtu.be' in source.lower():
+        source_type = "🎬 Video"
+        display_name = title if title else "YouTube Video"
+    else:
+        source_type = "📋 Source"
+        display_name = title if title else os.path.basename(source)
+    
+    return {
+        'type': source_type,
+        'name': display_name,
+        'full_source': source,
+        'title': title,
+        'tier': tier,
+        'content_preview': doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
+    }
+
 # --- Sidebar ---
 with st.sidebar:
-    st.title("MeitY Knowledge Base AI Agent 💡")
+    st.markdown('<h1 style="color: #4a90e2;">🇮🇳 MeitY AI Agent</h1>', unsafe_allow_html=True)
     st.markdown("---")
-    st.header("About")
-    st.markdown("""
-    This Generative AI Agent can answer queries based on documents, websites, and YouTube videos 
-    related to the Ministry of Electronics and IT (MeitY), Government of India.
-    """)
+    
+    # System Health Check
+    with st.expander("🔧 System Health", expanded=False):
+        health_status = get_system_health()
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Core Components:**")
+            for key, status in health_status.items():
+                if key != "details" and isinstance(status, bool):
+                    icon = "✅" if status else "❌"
+                    color_class = "status-good" if status else "status-bad"
+                    component_name = key.replace('_', ' ').title()
+                    st.markdown(f'<span class="{color_class}">{icon} {component_name}</span>', 
+                              unsafe_allow_html=True)
+        
+        with col2:
+            st.write("**Details:**")
+            details = health_status.get("details", {})
+            for key, value in details.items():
+                if "count" in key:
+                    st.write(f"📊 {key.title()}: {value}")
+                elif "error" in key:
+                    st.write(f"⚠️ {key.title()}: {str(value)[:30]}...")
+    
     st.markdown("---")
-    st.header("Technologies Used")
+    
+    # About Section
+    st.header("📖 About")
     st.markdown("""
-    - **LLM**: Together AI (Mistral)
-    - **Framework**: LangChain
-    - **Embeddings**: BAAI BGE
-    - **Vector Store**: FAISS
-    - **UI**: Streamlit
-    - **Fallback**: Tavily Search API
+    This AI Agent provides answers using official MeitY documents, 
+    websites, and multimedia content through advanced RAG technology.
+    
+    **Coverage Areas:**
+    - 🏛️ MeitY Policies & Initiatives
+    - 💻 Digital India Programs  
+    - 🔒 Cybersecurity Guidelines
+    - 📱 Technology Standards
+    - 🌐 Digital Governance
     """)
+    
+    st.markdown("---")
+    
+    # Technology Stack
+    with st.expander("🛠️ Tech Stack"):
+        st.markdown("""
+        - **LLM**: Together AI (Mistral-7B)
+        - **Framework**: LangChain
+        - **Embeddings**: BAAI BGE-Large
+        - **Vector DB**: FAISS
+        - **UI**: Streamlit
+        - **Search**: Tavily API
+        - **Processing**: Whisper, Playwright
+        """)
+    
+    # Quick Stats
+    st.markdown("---")
+    if 'query_count' not in st.session_state:
+        st.session_state.query_count = 0
+    
+    st.metric("Queries Processed", st.session_state.query_count)
 
-# --- Main Page Title ---
-st.markdown("""
-    <h2 style='text-align: center;'>
-        🗯️🇮🇳 MeitY Knowledge Base AI Agent
-    </h2>
-""", unsafe_allow_html=True)
+# --- Main Page ---
+st.markdown('<h1 class="main-title">🤖 MeitY Knowledge Base AI Agent</h1>', unsafe_allow_html=True)
 
-# --- Session State ---
+# Initialize session state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 if "latest_query" not in st.session_state:
     st.session_state.latest_query = ""
 if "latest_response" not in st.session_state:
     st.session_state.latest_response = None
 
-# --- Query Form ---
-with st.form("query_form"):
-    query_text = st.text_area("Please enter your question here:", height=150)
-    submitted = st.form_submit_button("Submit")
+# --- Query Input Section ---
+st.markdown("### 💬 Ask Your Question")
 
+# Sample questions for better UX
+sample_questions = [
+    "What are the key initiatives under Digital India?",
+    "Tell me about MeitY's cybersecurity policies",
+    "What is the National AI Portal about?",
+    "Explain the IT Act amendments",
+    "What are the recent updates in electronics manufacturing policy?"
+]
+
+# Quick question buttons
+st.markdown("**Quick Questions:**")
+cols = st.columns(3)
+for i, question in enumerate(sample_questions[:3]):
+    with cols[i]:
+        if st.button(f"📝 {question[:30]}...", key=f"sample_{i}", help=question):
+            st.session_state.sample_question = question
+
+# Handle sample question selection
+if 'sample_question' in st.session_state:
+    query_text = st.session_state.sample_question
+    del st.session_state.sample_question
+else:
+    query_text = st.text_area(
+        "Enter your question about MeitY, Digital India, or related policies:",
+        height=120,
+        placeholder="Example: What are the main objectives of the National Digital Communications Policy?",
+        help="Ask questions about Ministry of Electronics and IT policies, initiatives, or digital governance topics."
+    )
+
+# Submit button
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    submitted = st.button("🔍 Get Answer", type="primary", use_container_width=True)
+
+# Process query
 if submitted and query_text:
     st.session_state.latest_query = query_text
-    with st.spinner("Generating answer..."):
-        st.session_state.latest_response = get_answer(query_text)
+    st.session_state.query_count += 1
+    
+    # Show processing status
+    with st.spinner("🔍 Searching knowledge base..."):
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        # Simulate progress updates (you could make this real by modifying qa_chain.py)
+        import time
+        for i, status in enumerate([
+            "Checking local documents...",
+            "Searching web content...", 
+            "Analyzing video transcripts...",
+            "Generating response..."
+        ]):
+            status_text.text(status)
+            progress_bar.progress((i + 1) * 25)
+            if i < 3:  # Don't sleep on the last iteration
+                time.sleep(0.5)
+        
+        # Get the actual answer
+        try:
+            st.session_state.latest_response = get_answer(query_text)
+            progress_bar.progress(100)
+            status_text.text("✅ Complete!")
+            time.sleep(0.5)
+        except Exception as e:
+            logger.error(f"Error processing query: {e}")
+            st.session_state.latest_response = {
+                "answer": f"An error occurred while processing your query: {str(e)}",
+                "source_documents": [],
+                "tier": "Error",
+                "search_method": "error"
+            }
+        finally:
+            progress_bar.empty()
+            status_text.empty()
 
-# --- Show Response ---
+# --- Display Response ---
 if st.session_state.latest_response:
     st.markdown("---")
-    st.markdown(f"### Question:\n> {st.session_state.latest_query}")
+    
+    # Query Info
+    st.markdown(f"### 🔍 Query: *{st.session_state.latest_query}*")
     
     response_data = st.session_state.latest_response
-    st.markdown("### Answer:")
-    st.write(response_data.get("answer", "No answer generated."))
+    
+    # Show search method and tier information
+    search_method = response_data.get("search_method", "unknown")
+    tier = response_data.get("tier", "Unknown")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Search Method", search_method.replace("_", " ").title())
+    with col2:
+        st.metric("Source Tier", tier)
+    with col3:
+        source_count = len(response_data.get("source_documents", []))
+        st.metric("Sources Found", source_count)
+    
+    # Display Answer
+    st.markdown("### 📋 Answer")
+    answer_text = response_data.get("answer", "No answer generated.")
+    
+    # Add confidence indicator based on search method
+    confidence_indicators = {
+        "standard": "🟢 High Confidence",
+        "combined_relaxed": "🟡 Medium Confidence", 
+        "web_fallback": "🟠 External Search",
+        "emergency_combined": "🔴 Low Confidence",
+        "web_raw": "⚪ Unprocessed Results"
+    }
+    
+    confidence = confidence_indicators.get(search_method, "⚫ Unknown")
+    st.markdown(f"**Confidence Level:** {confidence}")
+    
+    # Display the answer in a nice container
+    formatted_answer = answer_text.replace("\n", "<br>")
+    st.markdown(
+    f'<div style="background-color: #25253D; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #4a90e2; margin: 1rem 0;">{formatted_answer}</div>',
+    unsafe_allow_html=True
+)
 
+    # Display Sources
     source_docs = response_data.get("source_documents", [])
+    
     if source_docs:
-        st.markdown("### References:")
+        st.markdown("### 📚 Sources & References")
         
-        # Get the base path for persistent storage from environment variables
-        # This will be '/persistent_storage' on Azure and 'persistent_storage' locally
-        PERSISTENT_DIR = os.environ.get("PERSISTENT_STORAGE_PATH", "persistent_storage")
-
-        for i, doc in enumerate(source_docs[:5]):
-            source = doc.metadata.get("source", "Unknown Source")
+        # Group sources by type
+        source_groups = {
+            "📄 Documents": [],
+            "🌐 Web Sources": [],
+            "🎬 Video Transcripts": [],
+            "📋 Other": []
+        }
+        
+        for i, doc in enumerate(source_docs[:10]):  # Limit to top 10 sources
+            source_info = format_source_display(doc, i)
             
-            # Check if the source is a local document path
-            is_local_doc = 'source_documents' in source.replace('\\', '/')
-
-            # Create a clean display name
-            filename = os.path.basename(source)
+            if source_info['type'] == "📄 Document":
+                source_groups["📄 Documents"].append((i, doc, source_info))
+            elif source_info['type'] == "🌐 Web":
+                source_groups["🌐 Web Sources"].append((i, doc, source_info))
+            elif source_info['type'] == "🎬 Video":
+                source_groups["🎬 Video Transcripts"].append((i, doc, source_info))
+            else:
+                source_groups["📋 Other"].append((i, doc, source_info))
+        
+        # Display each group
+        for group_name, sources in source_groups.items():
+            if sources:
+                with st.expander(f"{group_name} ({len(sources)} sources)", expanded=True):
+                    for idx, doc, source_info in sources:
+                        
+                        # Create source card
+                        st.markdown(f"""
+                        <div class="source-card">
+                            <h4 style="margin-top: 0; color: #4a90e2;">[{idx + 1}] {source_info['type']} {source_info['name']}</h4>
+                            <p><strong>Tier:</strong> {source_info['tier']}</p>
+                            <p><strong>Preview:</strong> {source_info['content_preview']}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Add download/view options
+                        col1, col2, col3 = st.columns([2, 2, 1])
+                        
+                        with col1:
+                            # For local files, provide download
+                            if os.path.exists(source_info['full_source']):
+                                try:
+                                    with open(source_info['full_source'], "rb") as f:
+                                        file_data = f.read()
+                                    
+                                    st.download_button(
+                                        label=f"📥 Download {source_info['name']}",
+                                        data=file_data,
+                                        file_name=os.path.basename(source_info['full_source']),
+                                        key=f"download_{idx}",
+                                        help=f"Download the source document: {source_info['name']}"
+                                    )
+                                except Exception as e:
+                                    st.error(f"Unable to load file: {str(e)[:50]}...")
+                        
+                        with col2:
+                            # For web sources, provide link
+                            if source_info['full_source'].startswith('http'):
+                                st.markdown(f"[🔗 View Source]({source_info['full_source']})", unsafe_allow_html=True)
+                            elif not os.path.exists(source_info['full_source']):
+                                st.write("📍 Internal Reference")
+                        
+                        with col3:
+                            # Show source type badge
+                            if source_info['tier']:
+                                st.markdown(f"<small><em>{source_info['tier']}</em></small>", unsafe_allow_html=True)
+                        
+                        st.markdown("---")
+        
+        # Summary statistics
+        if len(source_docs) > 0:
+            st.markdown("#### 📊 Source Summary")
             
-            # --- MODIFIED LOGIC TO HANDLE AZURE PATHS ---
-            if is_local_doc:
-                # Construct the full path to the file within the mounted storage on Azure
-                # Example: /persistent_storage/source_documents/report.pdf
-                azure_file_path = os.path.join(PERSISTENT_DIR, source)
+            # Count by type
+            type_counts = {}
+            tier_counts = {}
+            
+            for doc in source_docs:
+                source_info = format_source_display(doc, 0)
+                doc_type = source_info['type']
+                tier = source_info['tier']
                 
-                if os.path.exists(azure_file_path):
-                    with open(azure_file_path, "rb") as f:
-                        file_data = f.read()
-                    
-                    st.download_button(
-                        label=f"[{i+1}]: Download {filename}",
-                        data=file_data,
-                        file_name=filename,
-                        key=f"file_{i}"
-                    )
-                else:
-                    # Fallback if the file is not found in the Azure storage
-                    st.markdown(f"[{i+1}]: {filename} (Source file not available for download)")
+                type_counts[doc_type] = type_counts.get(doc_type, 0) + 1
+                tier_counts[tier] = tier_counts.get(tier, 0) + 1
             
-            else:  # It's a URL for scraped or YouTube content
-                st.markdown(f"[{i+1}]: [{filename}]({source})")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write("**By Source Type:**")
+                for doc_type, count in type_counts.items():
+                    st.write(f"{doc_type}: {count}")
+            
+            with col2:
+                st.write("**By Search Tier:**")
+                for tier, count in tier_counts.items():
+                    st.write(f"{tier}: {count}")
+    
+    else:
+        st.warning("⚠️ No source documents were found or returned. This might indicate an issue with the search system or that the query couldn't be matched to any content in the knowledge base.")
+    
+    # Add query to chat history
+    st.session_state.chat_history.append({
+        "timestamp": datetime.now(),
+        "query": st.session_state.latest_query,
+        "response": response_data,
+        "source_count": len(source_docs)
+    })
+
+# --- Chat History ---
+if st.session_state.chat_history:
+    with st.expander("📜 Recent Queries", expanded=False):
+        for i, entry in enumerate(reversed(st.session_state.chat_history[-5:])):  # Show last 5
+            st.markdown(f"""
+            **{entry['timestamp'].strftime('%H:%M:%S')}** - *{entry['query'][:100]}{'...' if len(entry['query']) > 100 else ''}*
+            
+            Sources: {entry['source_count']} | Tier: {entry['response'].get('tier', 'Unknown')}
+            """)
+            st.markdown("---")
+
+# --- Footer ---
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; color: #666; padding: 2rem;">
+    <p>🇮🇳 <strong>MeitY Knowledge Base AI Agent</strong></p>
+    <p>Powered by Advanced RAG Technology | Built for Ministry of Electronics and IT</p>
+    <p><em>This system provides information based on official documents, websites, and multimedia content.</em></p>
+</div>
+""", unsafe_allow_html=True)
