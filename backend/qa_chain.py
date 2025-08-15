@@ -140,7 +140,7 @@ YOUTUBE_FAISS_PATH = os.path.join(PERSISTENT_DIR, "youtube_faiss_index")
 
 # --- Embedding Model (Load Once) ---
 try:
-    embeddings = SentenceTransformerEmbeddings(model_name="BAAI/bge-large-en-v1.5")
+    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
     logger.info("✅ Embeddings model loaded successfully")
 except Exception as e:
     logger.error(f"❌ Failed to load embeddings model: {e}")
