@@ -1386,7 +1386,7 @@ if st.session_state.latest_response:
                     if os.path.exists(source_info['full_source']):
                         try:
                             with open(source_info['full_source'], "rb") as f:
-                                file_data = f.read()
+                                file_data = f.read() 
                             
                             st.download_button(
                                 label=f"📥 Download Document",
