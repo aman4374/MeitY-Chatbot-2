@@ -1598,6 +1598,11 @@ def find_document_file(source_path):
         
     filename = os.path.basename(source_path)
     
+    # Get current working directory for debugging
+    current_dir = os.getcwd()
+    logger.info(f"Current working directory: {current_dir}")
+    logger.info(f"Looking for file: {filename} (original path: {source_path})")
+    
     # Possible locations where documents might be stored in Azure
     possible_paths = [
         source_path,  # Original path
@@ -1608,26 +1613,62 @@ def find_document_file(source_path):
         os.path.join("backend", "documents", filename),  # backend documents
         os.path.join("/tmp", filename),  # tmp directory
         os.path.join(".", "documents", filename),  # relative documents
+        os.path.join(current_dir, "documents", filename),  # absolute documents
+        os.path.join(current_dir, filename),  # current dir + filename
+        # Add more Azure-specific paths
+        os.path.join("/home", "site", "wwwroot", "documents", filename),
+        os.path.join("/app", "documents", filename),
+        os.path.join("persistent_storage", filename),
+        # Try with source_documents folder structure
+        os.path.join("source_documents", filename),
+        os.path.join("persistent_storage", "source_documents", filename),
     ]
     
-    # Also try without extension variations
-    name_without_ext = os.path.splitext(filename)[0]
-    extensions = ['.pdf', '.docx', '.doc', '.txt', '.md']
-    
-    for ext in extensions:
-        for base_path in ["documents", "data", "persistent_storage/documents"]:
-            possible_paths.append(os.path.join(base_path, name_without_ext + ext))
+    # Also check if the filename contains path separators and try extracting just the name
+    if "/" in filename or "\\" in filename:
+        clean_filename = filename.split("/")[-1].split("\\")[-1]
+        for base_path in ["", "documents", "data", "persistent_storage", "source_documents"]:
+            if base_path:
+                possible_paths.append(os.path.join(base_path, clean_filename))
+            else:
+                possible_paths.append(clean_filename)
     
     # Check each possible path
     for path in possible_paths:
         try:
             if os.path.exists(path) and os.path.isfile(path):
-                logger.info(f"Found document at: {path}")
+                logger.info(f"✅ Found document at: {path}")
                 return path
+            else:
+                logger.debug(f"❌ Not found: {path}")
         except Exception as e:
+            logger.debug(f"Error checking path {path}: {e}")
             continue
     
-    logger.warning(f"Could not find document file for: {source_path}")
+    # If still not found, list current directory contents for debugging
+    try:
+        logger.info(f"Directory contents of {current_dir}:")
+        for item in os.listdir(current_dir):
+            logger.info(f"  - {item}")
+            
+        # Also check if documents folder exists
+        docs_path = os.path.join(current_dir, "documents")
+        if os.path.exists(docs_path):
+            logger.info(f"Contents of documents folder:")
+            for item in os.listdir(docs_path):
+                logger.info(f"  - documents/{item}")
+                
+        # Check persistent_storage folder
+        persistent_path = os.path.join(current_dir, "persistent_storage")
+        if os.path.exists(persistent_path):
+            logger.info(f"Contents of persistent_storage folder:")
+            for item in os.listdir(persistent_path):
+                logger.info(f"  - persistent_storage/{item}")
+                
+    except Exception as e:
+        logger.error(f"Error listing directory contents: {e}")
+    
+    logger.warning(f"❌ Could not find document file for: {source_path}")
     return None
 
 # --- Sidebar (Keep Original) ---
