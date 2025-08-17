@@ -599,450 +599,450 @@
 # """, unsafe_allow_html=True)  
 
 
-# import streamlit as st
-# from dotenv import load_dotenv
-# import os
-# import logging
-# from datetime import datetime
-# from backend.qa_chain import get_answer
+import streamlit as st
+from dotenv import load_dotenv
+import os
+import logging
+from datetime import datetime
+from backend.qa_chain import get_answer
 
-# # Load environment variables
-# load_dotenv()
+# Load environment variables
+load_dotenv()
 
-# # Set up logging
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# # --- Streamlit Page Config ---
-# st.set_page_config(
-#     page_title="MeitY AI Agent", 
-#     layout="wide",
-#     initial_sidebar_state="expanded",
-#     menu_items={
-#         'About': "MeitY Knowledge Base AI Agent - Powered by RAG technology"
-#     }
-# )
+# --- Streamlit Page Config ---
+st.set_page_config(
+    page_title="MeitY AI Agent", 
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'About': "MeitY Knowledge Base AI Agent - Powered by RAG technology"
+    }
+)
 
-# # --- Custom CSS Styling ---
-# st.markdown("""
-# <style>
-#     .stApp { 
-#         background-color: #1a1a2e; 
-#         color: #e0e0e0; 
-#     }
+# --- Custom CSS Styling ---
+st.markdown("""
+<style>
+    .stApp { 
+        background-color: #1a1a2e; 
+        color: #e0e0e0; 
+    }
     
-#     [data-testid="stSidebar"] { 
-#         background-color: #162447; 
-#         padding-top: 2rem;
-#     }
+    [data-testid="stSidebar"] { 
+        background-color: #162447; 
+        padding-top: 2rem;
+    }
     
-#     .stTextArea textarea { 
-#         background-color: #2e2e48; 
-#         color: #ffffff; 
-#         border: 1px solid #4a4a6a;
-#         border-radius: 10px;
-#     }
+    .stTextArea textarea { 
+        background-color: #2e2e48; 
+        color: #ffffff; 
+        border: 1px solid #4a4a6a;
+        border-radius: 10px;
+    }
     
-#     .stButton button {
-#         background-color: #1f4068; 
-#         color: #ffffff; 
-#         border: 1px solid #1b263b;
-#         border-radius: 10px;
-#         font-weight: bold;
-#         transition: all 0.3s ease;
-#     }
+    .stButton button {
+        background-color: #1f4068; 
+        color: #ffffff; 
+        border: 1px solid #1b263b;
+        border-radius: 10px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
     
-#     .stButton button:hover {
-#         background-color: #2c5d91; 
-#         border-color: #1b263b; 
-#         color: #ffffff;
-#         transform: translateY(-2px);
-#     }
+    .stButton button:hover {
+        background-color: #2c5d91; 
+        border-color: #1b263b; 
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
     
-#     [data-testid="stChatMessage"] {
-#         background-color: #25253D;
-#         border-radius: 15px;
-#         padding: 1.5rem;
-#         margin: 1rem 0;
-#         border-left: 4px solid #1f4068;
-#     }
+    [data-testid="stChatMessage"] {
+        background-color: #25253D;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #1f4068;
+    }
     
-#     .source-card {
-#         background-color: #2e2e48;
-#         border-radius: 10px;
-#         padding: 1rem;
-#         margin: 0.5rem 0;
-#         border-left: 3px solid #4a90e2;
-#     }
+    .source-card {
+        background-color: #2e2e48;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #4a90e2;
+    }
     
-#     .status-good {
-#         color: #4CAF50;
-#     }
+    .status-good {
+        color: #4CAF50;
+    }
     
-#     .status-bad {
-#         color: #f44336;
-#     }
+    .status-bad {
+        color: #f44336;
+    }
     
-#     .query-stats {
-#         background-color: #25253D;
-#         border-radius: 10px;
-#         padding: 1rem;
-#         margin: 1rem 0;
-#         border: 1px solid #4a4a6a;
-#     }
+    .query-stats {
+        background-color: #25253D;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        border: 1px solid #4a4a6a;
+    }
     
-#     .main-title {
-#         text-align: center;
-#         color: #4a90e2;
-#         font-size: 2.5rem;
-#         margin-bottom: 2rem;
-#         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-#     }
+    .main-title {
+        text-align: center;
+        color: #4a90e2;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
     
-#     .similarity-score {
-#         background-color: #1f4068;
-#         color: white;
-#         padding: 0.2rem 0.5rem;
-#         border-radius: 5px;
-#         font-size: 0.8rem;
-#         margin-left: 0.5rem;
-#     }
-# </style>
-# """, unsafe_allow_html=True)
+    .similarity-score {
+        background-color: #1f4068;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        margin-left: 0.5rem;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# # --- Helper Functions ---
-# def format_source_display(doc, index, similarity_score=None):
-#     """Format source document for better display with similarity score"""
-#     source = doc.metadata.get('source', 'Unknown Source')
-#     title = doc.metadata.get('title', '')
-#     doc_type = doc.metadata.get('type', 'unknown')
-#     tier = doc.metadata.get('tier', 'Unknown Tier')
+# --- Helper Functions ---
+def format_source_display(doc, index, similarity_score=None):
+    """Format source document for better display with similarity score"""
+    source = doc.metadata.get('source', 'Unknown Source')
+    title = doc.metadata.get('title', '')
+    doc_type = doc.metadata.get('type', 'unknown')
+    tier = doc.metadata.get('tier', 'Unknown Tier')
     
-#     # Determine source type and format accordingly
-#     if source.startswith('http'):
-#         source_type = "🌐 Web"
-#         display_name = source.split('/')[-1] or source
-#         if len(display_name) > 50:
-#             display_name = display_name[:47] + "..."
-#     elif os.path.exists(source):
-#         source_type = "📄 Document"
-#         display_name = os.path.basename(source)
-#     elif 'youtube' in source.lower() or 'youtu.be' in source.lower():
-#         source_type = "🎬 Video"
-#         display_name = title if title else "YouTube Video"
-#     else:
-#         source_type = "📋 Source"
-#         display_name = title if title else os.path.basename(source)
+    # Determine source type and format accordingly
+    if source.startswith('http'):
+        source_type = "🌐 Web"
+        display_name = source.split('/')[-1] or source
+        if len(display_name) > 50:
+            display_name = display_name[:47] + "..."
+    elif os.path.exists(source):
+        source_type = "📄 Document"
+        display_name = os.path.basename(source)
+    elif 'youtube' in source.lower() or 'youtu.be' in source.lower():
+        source_type = "🎬 Video"
+        display_name = title if title else "YouTube Video"
+    else:
+        source_type = "📋 Source"
+        display_name = title if title else os.path.basename(source)
     
-#     return {
-#         'type': source_type,
-#         'name': display_name,
-#         'full_source': source,
-#         'title': title,
-#         'tier': tier,
-#         'similarity_score': similarity_score,
-#         'content_preview': doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
-#     }
+    return {
+        'type': source_type,
+        'name': display_name,
+        'full_source': source,
+        'title': title,
+        'tier': tier,
+        'similarity_score': similarity_score,
+        'content_preview': doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
+    }
 
-# # --- Sidebar ---
-# with st.sidebar:
-#     st.markdown('<h1 style="color: #4a90e2;">🇮🇳 MeitY AI Agent</h1>', unsafe_allow_html=True)
-#     st.markdown("---")
+# --- Sidebar ---
+with st.sidebar:
+    st.markdown('<h1 style="color: #4a90e2;">🇮🇳 MeitY AI Agent</h1>', unsafe_allow_html=True)
+    st.markdown("---")
     
-#     # About Section
-#     st.header("📖 About")
-#     st.markdown("""
-#     This AI Agent provides answers using official MeitY documents, 
-#     websites, and multimedia content through advanced RAG technology.
+    # About Section
+    st.header("📖 About")
+    st.markdown("""
+    This AI Agent provides answers using official MeitY documents, 
+    websites, and multimedia content through advanced RAG technology.
     
-#     **Coverage Areas:**
-#     - 🏛️ MeitY Policies & Initiatives
-#     - 💻 Digital India Programs  
-#     - 🔒 Cybersecurity Guidelines
-#     - 📱 Technology Standards
-#     - 🌐 Digital Governance
-#     """)
+    **Coverage Areas:**
+    - 🏛️ MeitY Policies & Initiatives
+    - 💻 Digital India Programs  
+    - 🔒 Cybersecurity Guidelines
+    - 📱 Technology Standards
+    - 🌐 Digital Governance
+    """)
     
-#     st.markdown("---")
+    st.markdown("---")
     
-#     # Technology Stack
-#     with st.expander("🛠️ Tech Stack"):
-#         st.markdown("""
-#         - **LLM**: Together AI (Mistral-7B)
-#         - **Framework**: LangChain
-#         - **Embeddings**: BAAI BGE-Large
-#         - **Vector DB**: FAISS
-#         - **UI**: Streamlit
-#         - **Search**: Tavily API
-#         - **Processing**: Whisper, Playwright
-#         """)
+    # Technology Stack
+    with st.expander("🛠️ Tech Stack"):
+        st.markdown("""
+        - **LLM**: Together AI (Mistral-7B)
+        - **Framework**: LangChain
+        - **Embeddings**: BAAI BGE-Large
+        - **Vector DB**: FAISS
+        - **UI**: Streamlit
+        - **Search**: Tavily API
+        - **Processing**: Whisper, Playwright
+        """)
     
-#     # Quick Stats
-#     st.markdown("---")
-#     if 'query_count' not in st.session_state:
-#         st.session_state.query_count = 0
+    # Quick Stats
+    st.markdown("---")
+    if 'query_count' not in st.session_state:
+        st.session_state.query_count = 0
     
-#     st.metric("Queries Processed", st.session_state.query_count)
+    st.metric("Queries Processed", st.session_state.query_count)
 
-# # --- Main Page ---
-# st.markdown('<h1 class="main-title">🤖 MeitY Knowledge Base AI Agent</h1>', unsafe_allow_html=True)
+# --- Main Page ---
+st.markdown('<h1 class="main-title">🤖 MeitY Knowledge Base AI Agent</h1>', unsafe_allow_html=True)
 
-# # Initialize session state
-# if "chat_history" not in st.session_state:
-#     st.session_state.chat_history = []
-# if "latest_query" not in st.session_state:
-#     st.session_state.latest_query = ""
-# if "latest_response" not in st.session_state:
-#     st.session_state.latest_response = None
+# Initialize session state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+if "latest_query" not in st.session_state:
+    st.session_state.latest_query = ""
+if "latest_response" not in st.session_state:
+    st.session_state.latest_response = None
 
-# # --- Query Input Section ---
-# st.markdown("### 💬 Ask Your Question")
+# --- Query Input Section ---
+st.markdown("### 💬 Ask Your Question")
 
-# # Sample questions for better UX
-# sample_questions = [
-#     "What are the key initiatives under Digital India?",
-#     "Tell me about MeitY's cybersecurity policies",
-#     "What is the National AI Portal about?",
-#     "Explain the IT Act amendments",
-#     "What are the recent updates in electronics manufacturing policy?"
-# ]
+# Sample questions for better UX
+sample_questions = [
+    "What are the key initiatives under Digital India?",
+    "Tell me about MeitY's cybersecurity policies",
+    "What is the National AI Portal about?",
+    "Explain the IT Act amendments",
+    "What are the recent updates in electronics manufacturing policy?"
+]
 
-# # Quick question buttons
-# st.markdown("**Quick Questions:**")
-# cols = st.columns(3)
-# for i, question in enumerate(sample_questions[:3]):
-#     with cols[i]:
-#         if st.button(f"📝 {question[:30]}...", key=f"sample_{i}", help=question):
-#             st.session_state.sample_question = question
+# Quick question buttons
+st.markdown("**Quick Questions:**")
+cols = st.columns(3)
+for i, question in enumerate(sample_questions[:3]):
+    with cols[i]:
+        if st.button(f"📝 {question[:30]}...", key=f"sample_{i}", help=question):
+            st.session_state.sample_question = question
 
-# # Handle sample question selection
-# if 'sample_question' in st.session_state:
-#     query_text = st.session_state.sample_question
-#     del st.session_state.sample_question
-# else:
-#     query_text = st.text_area(
-#         "Enter your question about MeitY, Digital India, or related policies:",
-#         height=120,
-#         placeholder="Example: What are the main objectives of the National Digital Communications Policy?",
-#         help="Ask questions about Ministry of Electronics and IT policies, initiatives, or digital governance topics."
-#     )
+# Handle sample question selection
+if 'sample_question' in st.session_state:
+    query_text = st.session_state.sample_question
+    del st.session_state.sample_question
+else:
+    query_text = st.text_area(
+        "Enter your question about MeitY, Digital India, or related policies:",
+        height=120,
+        placeholder="Example: What are the main objectives of the National Digital Communications Policy?",
+        help="Ask questions about Ministry of Electronics and IT policies, initiatives, or digital governance topics."
+    )
 
-# # Submit button
-# col1, col2, col3 = st.columns([1, 2, 1])
-# with col2:
-#     submitted = st.button("🔍 Get Answer", type="primary", use_container_width=True)
+# Submit button
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    submitted = st.button("🔍 Get Answer", type="primary", use_container_width=True)
 
-# # Process query
-# if submitted and query_text:
-#     st.session_state.latest_query = query_text
-#     st.session_state.query_count += 1
+# Process query
+if submitted and query_text:
+    st.session_state.latest_query = query_text
+    st.session_state.query_count += 1
     
-#     # Show processing status
-#     with st.spinner("🔍 Searching knowledge base..."):
-#         progress_bar = st.progress(0)
-#         status_text = st.empty()
+    # Show processing status
+    with st.spinner("🔍 Searching knowledge base..."):
+        progress_bar = st.progress(0)
+        status_text = st.empty()
         
-#         # Simulate progress updates
-#         import time
-#         for i, status in enumerate([
-#             "Checking local documents...",
-#             "Searching web content...", 
-#             "Analyzing video transcripts...",
-#             "Generating response..."
-#         ]):
-#             status_text.text(status)
-#             progress_bar.progress((i + 1) * 25)
-#             if i < 3:
-#                 time.sleep(0.5)
+        # Simulate progress updates
+        import time
+        for i, status in enumerate([
+            "Checking local documents...",
+            "Searching web content...", 
+            "Analyzing video transcripts...",
+            "Generating response..."
+        ]):
+            status_text.text(status)
+            progress_bar.progress((i + 1) * 25)
+            if i < 3:
+                time.sleep(0.5)
         
-#         # Get the actual answer
-#         try:
-#             st.session_state.latest_response = get_answer(query_text)
-#             progress_bar.progress(100)
-#             status_text.text("✅ Complete!")
-#             time.sleep(0.5)
-#         except Exception as e:
-#             logger.error(f"Error processing query: {e}")
-#             st.session_state.latest_response = {
-#                 "answer": f"An error occurred while processing your query: {str(e)}",
-#                 "source_documents": [],
-#                 "tier": "Error",
-#                 "search_method": "error"
-#             }
-#         finally:
-#             progress_bar.empty()
-#             status_text.empty()
+        # Get the actual answer
+        try:
+            st.session_state.latest_response = get_answer(query_text)
+            progress_bar.progress(100)
+            status_text.text("✅ Complete!")
+            time.sleep(0.5)
+        except Exception as e:
+            logger.error(f"Error processing query: {e}")
+            st.session_state.latest_response = {
+                "answer": f"An error occurred while processing your query: {str(e)}",
+                "source_documents": [],
+                "tier": "Error",
+                "search_method": "error"
+            }
+        finally:
+            progress_bar.empty()
+            status_text.empty()
 
-# # --- Display Response ---
-# if st.session_state.latest_response:
-#     st.markdown("---")
+# --- Display Response ---
+if st.session_state.latest_response:
+    st.markdown("---")
     
-#     # Query Info
-#     st.markdown(f"### 🔍 Query: *{st.session_state.latest_query}*")
+    # Query Info
+    st.markdown(f"### 🔍 Query: *{st.session_state.latest_query}*")
     
-#     response_data = st.session_state.latest_response
+    response_data = st.session_state.latest_response
     
-#     # Show search method and tier information
-#     search_method = response_data.get("search_method", "unknown")
-#     tier = response_data.get("tier", "Unknown")
+    # Show search method and tier information
+    search_method = response_data.get("search_method", "unknown")
+    tier = response_data.get("tier", "Unknown")
     
-#     col1, col2, col3 = st.columns(3)
-#     with col1:
-#         st.metric("Search Method", search_method.replace("_", " ").title())
-#     with col2:
-#         st.metric("Source Tier", tier)
-#     with col3:
-#         source_count = len(response_data.get("source_documents", []))
-#         st.metric("Top Sources", f"{min(source_count, 5)} of {source_count}")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Search Method", search_method.replace("_", " ").title())
+    with col2:
+        st.metric("Source Tier", tier)
+    with col3:
+        source_count = len(response_data.get("source_documents", []))
+        st.metric("Top Sources", f"{min(source_count, 5)} of {source_count}")
     
-#     # Display Answer
-#     st.markdown("### 📋 Answer")
-#     answer_text = response_data.get("answer", "No answer generated.")
+    # Display Answer
+    st.markdown("### 📋 Answer")
+    answer_text = response_data.get("answer", "No answer generated.")
     
-#     # Add confidence indicator based on search method
-#     confidence_indicators = {
-#         "standard": "🟢 High Confidence",
-#         "combined_relaxed": "🟡 Medium Confidence", 
-#         "web_fallback": "🟠 External Search",
-#         "emergency_combined": "🔴 Low Confidence",
-#         "web_raw": "⚪ Unprocessed Results"
-#     }
+    # Add confidence indicator based on search method
+    confidence_indicators = {
+        "standard": "🟢 High Confidence",
+        "combined_relaxed": "🟡 Medium Confidence", 
+        "web_fallback": "🟠 External Search",
+        "emergency_combined": "🔴 Low Confidence",
+        "web_raw": "⚪ Unprocessed Results"
+    }
     
-#     confidence = confidence_indicators.get(search_method, "⚫ Unknown")
-#     st.markdown(f"**Confidence Level:** {confidence}")
+    confidence = confidence_indicators.get(search_method, "⚫ Unknown")
+    st.markdown(f"**Confidence Level:** {confidence}")
     
-#     # Display the answer in a nice container
-#     formatted_answer = answer_text.replace("\n", "<br>")
-#     st.markdown(
-#         f'<div style="background-color: #25253D; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #4a90e2; margin: 1rem 0;">{formatted_answer}</div>',
-#         unsafe_allow_html=True
-#     )
+    # Display the answer in a nice container
+    formatted_answer = answer_text.replace("\n", "<br>")
+    st.markdown(
+        f'<div style="background-color: #25253D; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #4a90e2; margin: 1rem 0;">{formatted_answer}</div>',
+        unsafe_allow_html=True
+    )
 
-#     # Display Top 5 Sources
-#     source_docs = response_data.get("source_documents", [])
-#     similarity_scores = response_data.get("similarity_scores", [])
+    # Display Top 5 Sources
+    source_docs = response_data.get("source_documents", [])
+    similarity_scores = response_data.get("similarity_scores", [])
     
-#     if source_docs:
-#         st.markdown("### 📚 Top 5 Most Relevant Sources")
+    if source_docs:
+        st.markdown("### 📚 Top 5 Most Relevant Sources")
         
-#         # Limit to top 5 sources
-#         top_sources = source_docs[:5]
-#         top_scores = similarity_scores[:5] if similarity_scores else [None] * 5
+        # Limit to top 5 sources
+        top_sources = source_docs[:5]
+        top_scores = similarity_scores[:5] if similarity_scores else [None] * 5
         
-#         # Display each source
-#         for i, (doc, score) in enumerate(zip(top_sources, top_scores)):
-#             source_info = format_source_display(doc, i, score)
+        # Display each source
+        for i, (doc, score) in enumerate(zip(top_sources, top_scores)):
+            source_info = format_source_display(doc, i, score)
             
-#             # Create source card with similarity score
-#             score_display = f'<span class="similarity-score">Score: {score:.3f}</span>' if score is not None else ""
+            # Create source card with similarity score
+            score_display = f'<span class="similarity-score">Score: {score:.3f}</span>' if score is not None else ""
             
-#             st.markdown(f"""
-#             <div class="source-card">
-#                 <h4 style="margin-top: 0; color: #4a90e2;">
-#                     [{i + 1}] {source_info['type']} {source_info['name']} {score_display}
-#                 </h4>
-#                 <p><strong>Tier:</strong> {source_info['tier']}</p>
-#                 <p><strong>Preview:</strong> {source_info['content_preview']}</p>
-#             </div>
-#             """, unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="source-card">
+                <h4 style="margin-top: 0; color: #4a90e2;">
+                    [{i + 1}] {source_info['type']} {source_info['name']} {score_display}
+                </h4>
+                <p><strong>Tier:</strong> {source_info['tier']}</p>
+                <p><strong>Preview:</strong> {source_info['content_preview']}</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-#             # Add download/view options
-#             col1, col2, col3 = st.columns([2, 2, 1])
+            # Add download/view options
+            col1, col2, col3 = st.columns([2, 2, 1])
             
-#             with col1:
-#                 # For local files, provide download
-#                 if os.path.exists(source_info['full_source']):
-#                     try:
-#                         with open(source_info['full_source'], "rb") as f:
-#                             file_data = f.read()
+            with col1:
+                # For local files, provide download
+                if os.path.exists(source_info['full_source']):
+                    try:
+                        with open(source_info['full_source'], "rb") as f:
+                            file_data = f.read()
                         
-#                         st.download_button(
-#                             label=f"📥 Download {source_info['name']}",
-#                             data=file_data,
-#                             file_name=os.path.basename(source_info['full_source']),
-#                             key=f"download_{i}",
-#                             help=f"Download the source document: {source_info['name']}"
-#                         )
-#                     except Exception as e:
-#                         st.error(f"Unable to load file: {str(e)[:50]}...")
+                        st.download_button(
+                            label=f"📥 Download {source_info['name']}",
+                            data=file_data,
+                            file_name=os.path.basename(source_info['full_source']),
+                            key=f"download_{i}",
+                            help=f"Download the source document: {source_info['name']}"
+                        )
+                    except Exception as e:
+                        st.error(f"Unable to load file: {str(e)[:50]}...")
             
-#             with col2:
-#                 # For web sources, provide link
-#                 if source_info['full_source'].startswith('http'):
-#                     st.markdown(f"[🔗 View Source]({source_info['full_source']})", unsafe_allow_html=True)
-#                 elif not os.path.exists(source_info['full_source']):
-#                     st.write("📍 Internal Reference")
+            with col2:
+                # For web sources, provide link
+                if source_info['full_source'].startswith('http'):
+                    st.markdown(f"[🔗 View Source]({source_info['full_source']})", unsafe_allow_html=True)
+                elif not os.path.exists(source_info['full_source']):
+                    st.write("📍 Internal Reference")
             
-#             with col3:
-#                 # Show rank badge
-#                 rank_colors = ["#FFD700", "#C0C0C0", "#CD7F32", "#4a90e2", "#6a4c93"]
-#                 rank_color = rank_colors[min(i, 4)]
-#                 st.markdown(f'<div style="background-color: {rank_color}; color: white; padding: 0.2rem 0.5rem; border-radius: 15px; text-align: center; font-size: 0.8rem; font-weight: bold;">#{i+1}</div>', unsafe_allow_html=True)
+            with col3:
+                # Show rank badge
+                rank_colors = ["#FFD700", "#C0C0C0", "#CD7F32", "#4a90e2", "#6a4c93"]
+                rank_color = rank_colors[min(i, 4)]
+                st.markdown(f'<div style="background-color: {rank_color}; color: white; padding: 0.2rem 0.5rem; border-radius: 15px; text-align: center; font-size: 0.8rem; font-weight: bold;">#{i+1}</div>', unsafe_allow_html=True)
         
-#         # Summary statistics for top 5
-#         st.markdown("#### 📊 Top 5 Sources Summary")
+        # Summary statistics for top 5
+        st.markdown("#### 📊 Top 5 Sources Summary")
         
-#         # Count by type for top 5
-#         type_counts = {}
-#         tier_counts = {}
+        # Count by type for top 5
+        type_counts = {}
+        tier_counts = {}
         
-#         for doc in top_sources:
-#             source_info = format_source_display(doc, 0)
-#             doc_type = source_info['type']
-#             tier = source_info['tier']
+        for doc in top_sources:
+            source_info = format_source_display(doc, 0)
+            doc_type = source_info['type']
+            tier = source_info['tier']
             
-#             type_counts[doc_type] = type_counts.get(doc_type, 0) + 1
-#             tier_counts[tier] = tier_counts.get(tier, 0) + 1
+            type_counts[doc_type] = type_counts.get(doc_type, 0) + 1
+            tier_counts[tier] = tier_counts.get(tier, 0) + 1
         
-#         col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
         
-#         with col1:
-#             st.write("**By Source Type:**")
-#             for doc_type, count in type_counts.items():
-#                 st.write(f"{doc_type}: {count}")
+        with col1:
+            st.write("**By Source Type:**")
+            for doc_type, count in type_counts.items():
+                st.write(f"{doc_type}: {count}")
         
-#         with col2:
-#             st.write("**By Search Tier:**")
-#             for tier, count in tier_counts.items():
-#                 st.write(f"{tier}: {count}")
+        with col2:
+            st.write("**By Search Tier:**")
+            for tier, count in tier_counts.items():
+                st.write(f"{tier}: {count}")
         
-#         # Show score range if available
-#         if similarity_scores:
-#             valid_scores = [s for s in top_scores if s is not None]
-#             if valid_scores:
-#                 st.markdown(f"**Similarity Score Range:** {min(valid_scores):.3f} - {max(valid_scores):.3f}")
+        # Show score range if available
+        if similarity_scores:
+            valid_scores = [s for s in top_scores if s is not None]
+            if valid_scores:
+                st.markdown(f"**Similarity Score Range:** {min(valid_scores):.3f} - {max(valid_scores):.3f}")
     
-#     else:
-#         st.warning("⚠️ No source documents were found or returned. This might indicate an issue with the search system or that the query couldn't be matched to any content in the knowledge base.")
+    else:
+        st.warning("⚠️ No source documents were found or returned. This might indicate an issue with the search system or that the query couldn't be matched to any content in the knowledge base.")
     
-#     # Add query to chat history
-#     st.session_state.chat_history.append({
-#         "timestamp": datetime.now(),
-#         "query": st.session_state.latest_query,
-#         "response": response_data,
-#         "source_count": len(source_docs)
-#     })
+    # Add query to chat history
+    st.session_state.chat_history.append({
+        "timestamp": datetime.now(),
+        "query": st.session_state.latest_query,
+        "response": response_data,
+        "source_count": len(source_docs)
+    })
 
-# # --- Chat History ---
-# if st.session_state.chat_history:
-#     with st.expander("📜 Recent Queries", expanded=False):
-#         for i, entry in enumerate(reversed(st.session_state.chat_history[-5:])):  # Show last 5
-#             st.markdown(f"""
-#             **{entry['timestamp'].strftime('%H:%M:%S')}** - *{entry['query'][:100]}{'...' if len(entry['query']) > 100 else ''}*
+# --- Chat History ---
+if st.session_state.chat_history:
+    with st.expander("📜 Recent Queries", expanded=False):
+        for i, entry in enumerate(reversed(st.session_state.chat_history[-5:])):  # Show last 5
+            st.markdown(f"""
+            **{entry['timestamp'].strftime('%H:%M:%S')}** - *{entry['query'][:100]}{'...' if len(entry['query']) > 100 else ''}*
             
-#             Sources: {min(entry['source_count'], 5)} shown of {entry['source_count']} total | Tier: {entry['response'].get('tier', 'Unknown')}
-#             """)
-#             st.markdown("---")
+            Sources: {min(entry['source_count'], 5)} shown of {entry['source_count']} total | Tier: {entry['response'].get('tier', 'Unknown')}
+            """)
+            st.markdown("---")
 
-# # --- Footer ---
-# st.markdown("---")
-# st.markdown("""
-# <div style="text-align: center; color: #666; padding: 2rem;">
-#     <p>🇮🇳 <strong>MeitY Knowledge Base AI Agent</strong></p>
-#     <p>Powered by Advanced RAG Technology | Built for Ministry of Electronics and IT</p>
-#     <p><em>This system provides information based on official documents, websites, and multimedia content.</em></p>
-# </div>
-# """, unsafe_allow_html=True)  
+# --- Footer ---
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; color: #666; padding: 2rem;">
+    <p>🇮🇳 <strong>MeitY Knowledge Base AI Agent</strong></p>
+    <p>Powered by Advanced RAG Technology | Built for Ministry of Electronics and IT</p>
+    <p><em>This system provides information based on official documents, websites, and multimedia content.</em></p>
+</div>
+""", unsafe_allow_html=True)  
 
 
 
@@ -1444,483 +1444,483 @@
 # """, unsafe_allow_html=True)  
 
 
-import streamlit as st
-from dotenv import load_dotenv
-import os
-import logging
-from datetime import datetime
-from backend.qa_chain import get_answer
+# import streamlit as st
+# from dotenv import load_dotenv
+# import os
+# import logging
+# from datetime import datetime
+# from backend.qa_chain import get_answer
 
-# Load environment variables
-load_dotenv()
+# # Load environment variables
+# load_dotenv()
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# # Set up logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
-# --- Streamlit Page Config ---
-st.set_page_config(
-    page_title="MeitY AI Agent", 
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'About': "MeitY Knowledge Base AI Agent - Powered by RAG technology"
-    }
-)
+# # --- Streamlit Page Config ---
+# st.set_page_config(
+#     page_title="MeitY AI Agent", 
+#     layout="wide",
+#     initial_sidebar_state="expanded",
+#     menu_items={
+#         'About': "MeitY Knowledge Base AI Agent - Powered by RAG technology"
+#     }
+# )
 
-# --- Custom CSS Styling (Original Color Scheme) ---
-st.markdown("""
-<style>
-    .stApp { 
-        background-color: #1a1a2e; 
-        color: #e0e0e0; 
-    }
+# # --- Custom CSS Styling (Original Color Scheme) ---
+# st.markdown("""
+# <style>
+#     .stApp { 
+#         background-color: #1a1a2e; 
+#         color: #e0e0e0; 
+#     }
     
-    [data-testid="stSidebar"] { 
-        background-color: #162447; 
-        padding-top: 2rem;
-    }
+#     [data-testid="stSidebar"] { 
+#         background-color: #162447; 
+#         padding-top: 2rem;
+#     }
     
-    .stTextArea textarea { 
-        background-color: #2e2e48; 
-        color: #ffffff; 
-        border: 1px solid #4a4a6a;
-        border-radius: 10px;
-    }
+#     .stTextArea textarea { 
+#         background-color: #2e2e48; 
+#         color: #ffffff; 
+#         border: 1px solid #4a4a6a;
+#         border-radius: 10px;
+#     }
     
-    .stButton button {
-        background-color: #1f4068; 
-        color: #ffffff; 
-        border: 1px solid #1b263b;
-        border-radius: 10px;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
+#     .stButton button {
+#         background-color: #1f4068; 
+#         color: #ffffff; 
+#         border: 1px solid #1b263b;
+#         border-radius: 10px;
+#         font-weight: bold;
+#         transition: all 0.3s ease;
+#     }
     
-    .stButton button:hover {
-        background-color: #2c5d91; 
-        border-color: #1b263b; 
-        color: #ffffff;
-        transform: translateY(-2px);
-    }
+#     .stButton button:hover {
+#         background-color: #2c5d91; 
+#         border-color: #1b263b; 
+#         color: #ffffff;
+#         transform: translateY(-2px);
+#     }
     
-    [data-testid="stChatMessage"] {
-        background-color: #25253D;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        border-left: 4px solid #1f4068;
-    }
+#     [data-testid="stChatMessage"] {
+#         background-color: #25253D;
+#         border-radius: 15px;
+#         padding: 1.5rem;
+#         margin: 1rem 0;
+#         border-left: 4px solid #1f4068;
+#     }
     
-    .answer-container {
-        background-color: #25253D;
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 2rem 0;
-        border-left: 4px solid #1f4068;
-        color: #e0e0e0;
-    }
+#     .answer-container {
+#         background-color: #25253D;
+#         border-radius: 15px;
+#         padding: 2rem;
+#         margin: 2rem 0;
+#         border-left: 4px solid #1f4068;
+#         color: #e0e0e0;
+#     }
     
-    .source-card {
-        background-color: #2e2e48;
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-left: 3px solid #4a90e2;
-        color: #e0e0e0;
-    }
+#     .source-card {
+#         background-color: #2e2e48;
+#         border-radius: 10px;
+#         padding: 1rem;
+#         margin: 0.5rem 0;
+#         border-left: 3px solid #4a90e2;
+#         color: #e0e0e0;
+#     }
     
-    .query-display {
-        background-color: #25253D;
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 1rem 0;
-        border: 1px solid #4a4a6a;
-        color: #4a90e2;
-        font-style: italic;
-    }
+#     .query-display {
+#         background-color: #25253D;
+#         border-radius: 10px;
+#         padding: 1rem;
+#         margin: 1rem 0;
+#         border: 1px solid #4a4a6a;
+#         color: #4a90e2;
+#         font-style: italic;
+#     }
     
-    .main-title {
-        text-align: center;
-        color: #4a90e2;
-        font-size: 2.5rem;
-        margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
+#     .main-title {
+#         text-align: center;
+#         color: #4a90e2;
+#         font-size: 2.5rem;
+#         margin-bottom: 2rem;
+#         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+#     }
     
-    .subtitle {
-        text-align: center;
-        color: #a0a0a0;
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-    }
-</style>
-""", unsafe_allow_html=True)
+#     .subtitle {
+#         text-align: center;
+#         color: #a0a0a0;
+#         font-size: 1.1rem;
+#         margin-bottom: 2rem;
+#     }
+# </style>
+# """, unsafe_allow_html=True)
 
-# --- Helper Functions ---
-def format_source_display(doc, index):
-    """Format source document for clean display"""
-    source = doc.metadata.get('source', 'Unknown Source')
-    title = doc.metadata.get('title', '')
+# # --- Helper Functions ---
+# def format_source_display(doc, index):
+#     """Format source document for clean display"""
+#     source = doc.metadata.get('source', 'Unknown Source')
+#     title = doc.metadata.get('title', '')
     
-    # Determine source type and format accordingly
-    if source.startswith('http'):
-        source_type = "🌐 Web"
-        display_name = source.split('/')[-1] or source
-        if len(display_name) > 50:
-            display_name = display_name[:47] + "..."
-    elif 'youtube' in source.lower() or 'youtu.be' in source.lower():
-        source_type = "🎬 Video"
-        display_name = title if title else "YouTube Video"
-    else:
-        # For document sources, try to determine if it's a local file
-        source_type = "📄 Document"
-        display_name = title if title else os.path.basename(source)
+#     # Determine source type and format accordingly
+#     if source.startswith('http'):
+#         source_type = "🌐 Web"
+#         display_name = source.split('/')[-1] or source
+#         if len(display_name) > 50:
+#             display_name = display_name[:47] + "..."
+#     elif 'youtube' in source.lower() or 'youtu.be' in source.lower():
+#         source_type = "🎬 Video"
+#         display_name = title if title else "YouTube Video"
+#     else:
+#         # For document sources, try to determine if it's a local file
+#         source_type = "📄 Document"
+#         display_name = title if title else os.path.basename(source)
     
-    return {
-        'type': source_type,
-        'name': display_name,
-        'full_source': source,
-        'title': title,
-        'content_preview': doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
-    }
+#     return {
+#         'type': source_type,
+#         'name': display_name,
+#         'full_source': source,
+#         'title': title,
+#         'content_preview': doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
+#     }
 
-def find_document_file(source_path):
-    """
-    Try to find the document file in various possible locations for Azure deployment
-    """
-    if not source_path:
-        return None
+# def find_document_file(source_path):
+#     """
+#     Try to find the document file in various possible locations for Azure deployment
+#     """
+#     if not source_path:
+#         return None
         
-    # If it's a web URL, return None
-    if source_path.startswith('http'):
-        return None
+#     # If it's a web URL, return None
+#     if source_path.startswith('http'):
+#         return None
         
-    filename = os.path.basename(source_path)
+#     filename = os.path.basename(source_path)
     
-    # Get current working directory for debugging
-    current_dir = os.getcwd()
-    logger.info(f"Current working directory: {current_dir}")
-    logger.info(f"Looking for file: {filename} (original path: {source_path})")
+#     # Get current working directory for debugging
+#     current_dir = os.getcwd()
+#     logger.info(f"Current working directory: {current_dir}")
+#     logger.info(f"Looking for file: {filename} (original path: {source_path})")
     
-    # Possible locations where documents might be stored in Azure
-    possible_paths = [
-        source_path,  # Original path
-        filename,  # Just filename in current directory
-        os.path.join("documents", filename),  # documents folder
-        os.path.join("data", filename),  # data folder
-        os.path.join("persistent_storage", "documents", filename),  # persistent storage
-        os.path.join("backend", "documents", filename),  # backend documents
-        os.path.join("/tmp", filename),  # tmp directory
-        os.path.join(".", "documents", filename),  # relative documents
-        os.path.join(current_dir, "documents", filename),  # absolute documents
-        os.path.join(current_dir, filename),  # current dir + filename
-        # Add more Azure-specific paths
-        os.path.join("/home", "site", "wwwroot", "documents", filename),
-        os.path.join("/app", "documents", filename),
-        os.path.join("persistent_storage", filename),
-        # Try with source_documents folder structure
-        os.path.join("source_documents", filename),
-        os.path.join("persistent_storage", "source_documents", filename),
-    ]
+#     # Possible locations where documents might be stored in Azure
+#     possible_paths = [
+#         source_path,  # Original path
+#         filename,  # Just filename in current directory
+#         os.path.join("documents", filename),  # documents folder
+#         os.path.join("data", filename),  # data folder
+#         os.path.join("persistent_storage", "documents", filename),  # persistent storage
+#         os.path.join("backend", "documents", filename),  # backend documents
+#         os.path.join("/tmp", filename),  # tmp directory
+#         os.path.join(".", "documents", filename),  # relative documents
+#         os.path.join(current_dir, "documents", filename),  # absolute documents
+#         os.path.join(current_dir, filename),  # current dir + filename
+#         # Add more Azure-specific paths
+#         os.path.join("/home", "site", "wwwroot", "documents", filename),
+#         os.path.join("/app", "documents", filename),
+#         os.path.join("persistent_storage", filename),
+#         # Try with source_documents folder structure
+#         os.path.join("source_documents", filename),
+#         os.path.join("persistent_storage", "source_documents", filename),
+#     ]
     
-    # Also check if the filename contains path separators and try extracting just the name
-    if "/" in filename or "\\" in filename:
-        clean_filename = filename.split("/")[-1].split("\\")[-1]
-        for base_path in ["", "documents", "data", "persistent_storage", "source_documents"]:
-            if base_path:
-                possible_paths.append(os.path.join(base_path, clean_filename))
-            else:
-                possible_paths.append(clean_filename)
+#     # Also check if the filename contains path separators and try extracting just the name
+#     if "/" in filename or "\\" in filename:
+#         clean_filename = filename.split("/")[-1].split("\\")[-1]
+#         for base_path in ["", "documents", "data", "persistent_storage", "source_documents"]:
+#             if base_path:
+#                 possible_paths.append(os.path.join(base_path, clean_filename))
+#             else:
+#                 possible_paths.append(clean_filename)
     
-    # Check each possible path
-    for path in possible_paths:
-        try:
-            if os.path.exists(path) and os.path.isfile(path):
-                logger.info(f"✅ Found document at: {path}")
-                return path
-            else:
-                logger.debug(f"❌ Not found: {path}")
-        except Exception as e:
-            logger.debug(f"Error checking path {path}: {e}")
-            continue
+#     # Check each possible path
+#     for path in possible_paths:
+#         try:
+#             if os.path.exists(path) and os.path.isfile(path):
+#                 logger.info(f"✅ Found document at: {path}")
+#                 return path
+#             else:
+#                 logger.debug(f"❌ Not found: {path}")
+#         except Exception as e:
+#             logger.debug(f"Error checking path {path}: {e}")
+#             continue
     
-    # If still not found, list current directory contents for debugging
-    try:
-        logger.info(f"Directory contents of {current_dir}:")
-        for item in os.listdir(current_dir):
-            logger.info(f"  - {item}")
+#     # If still not found, list current directory contents for debugging
+#     try:
+#         logger.info(f"Directory contents of {current_dir}:")
+#         for item in os.listdir(current_dir):
+#             logger.info(f"  - {item}")
             
-        # Also check if documents folder exists
-        docs_path = os.path.join(current_dir, "documents")
-        if os.path.exists(docs_path):
-            logger.info(f"Contents of documents folder:")
-            for item in os.listdir(docs_path):
-                logger.info(f"  - documents/{item}")
+#         # Also check if documents folder exists
+#         docs_path = os.path.join(current_dir, "documents")
+#         if os.path.exists(docs_path):
+#             logger.info(f"Contents of documents folder:")
+#             for item in os.listdir(docs_path):
+#                 logger.info(f"  - documents/{item}")
                 
-        # Check persistent_storage folder
-        persistent_path = os.path.join(current_dir, "persistent_storage")
-        if os.path.exists(persistent_path):
-            logger.info(f"Contents of persistent_storage folder:")
-            for item in os.listdir(persistent_path):
-                logger.info(f"  - persistent_storage/{item}")
+#         # Check persistent_storage folder
+#         persistent_path = os.path.join(current_dir, "persistent_storage")
+#         if os.path.exists(persistent_path):
+#             logger.info(f"Contents of persistent_storage folder:")
+#             for item in os.listdir(persistent_path):
+#                 logger.info(f"  - persistent_storage/{item}")
                 
-    except Exception as e:
-        logger.error(f"Error listing directory contents: {e}")
+#     except Exception as e:
+#         logger.error(f"Error listing directory contents: {e}")
     
-    logger.warning(f"❌ Could not find document file for: {source_path}")
-    return None
+#     logger.warning(f"❌ Could not find document file for: {source_path}")
+#     return None
 
-# --- Sidebar (Keep Original) ---
-with st.sidebar:
-    st.markdown('<h1 style="color: #4a90e2;">🇮🇳 MeitY AI Agent</h1>', unsafe_allow_html=True)
-    st.markdown("---")
+# # --- Sidebar (Keep Original) ---
+# with st.sidebar:
+#     st.markdown('<h1 style="color: #4a90e2;">🇮🇳 MeitY AI Agent</h1>', unsafe_allow_html=True)
+#     st.markdown("---")
     
-    # About Section
-    st.header("📖 About")
-    st.markdown("""
-    This AI Agent provides answers using official MeitY documents, 
-    websites, and multimedia content through advanced RAG technology.
+#     # About Section
+#     st.header("📖 About")
+#     st.markdown("""
+#     This AI Agent provides answers using official MeitY documents, 
+#     websites, and multimedia content through advanced RAG technology.
     
-    **Coverage Areas:**
-    - 🏛️ MeitY Policies & Initiatives
-    - 💻 Digital India Programs  
-    - 🔒 Cybersecurity Guidelines
-    - 📱 Technology Standards
-    - 🌐 Digital Governance
-    """)
+#     **Coverage Areas:**
+#     - 🏛️ MeitY Policies & Initiatives
+#     - 💻 Digital India Programs  
+#     - 🔒 Cybersecurity Guidelines
+#     - 📱 Technology Standards
+#     - 🌐 Digital Governance
+#     """)
     
-    st.markdown("---")
+#     st.markdown("---")
     
-    # Technology Stack
-    with st.expander("🛠️ Tech Stack"):
-        st.markdown("""
-        - **LLM**: Together AI (Mistral-7B)
-        - **Framework**: LangChain
-        - **Embeddings**: BAAI BGE-Large
-        - **Vector DB**: FAISS
-        - **UI**: Streamlit
-        - **Search**: Tavily API
-        - **Processing**: Whisper, Playwright
-        """)
+#     # Technology Stack
+#     with st.expander("🛠️ Tech Stack"):
+#         st.markdown("""
+#         - **LLM**: Together AI (Mistral-7B)
+#         - **Framework**: LangChain
+#         - **Embeddings**: BAAI BGE-Large
+#         - **Vector DB**: FAISS
+#         - **UI**: Streamlit
+#         - **Search**: Tavily API
+#         - **Processing**: Whisper, Playwright
+#         """)
     
-    # Quick Stats
-    st.markdown("---")
-    if 'query_count' not in st.session_state:
-        st.session_state.query_count = 0
+#     # Quick Stats
+#     st.markdown("---")
+#     if 'query_count' not in st.session_state:
+#         st.session_state.query_count = 0
     
-    st.metric("Queries Processed", st.session_state.query_count)
+#     st.metric("Queries Processed", st.session_state.query_count)
 
-# --- Main Page ---
-st.markdown('<h1 class="main-title">🤖 MeitY Knowledge Base AI Agent</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Get instant answers about Ministry of Electronics and IT policies, initiatives, and digital governance</p>', unsafe_allow_html=True)
+# # --- Main Page ---
+# st.markdown('<h1 class="main-title">🤖 MeitY Knowledge Base AI Agent</h1>', unsafe_allow_html=True)
+# st.markdown('<p class="subtitle">Get instant answers about Ministry of Electronics and IT policies, initiatives, and digital governance</p>', unsafe_allow_html=True)
 
-# Initialize session state
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-if "latest_query" not in st.session_state:
-    st.session_state.latest_query = ""
-if "latest_response" not in st.session_state:
-    st.session_state.latest_response = None
+# # Initialize session state
+# if "chat_history" not in st.session_state:
+#     st.session_state.chat_history = []
+# if "latest_query" not in st.session_state:
+#     st.session_state.latest_query = ""
+# if "latest_response" not in st.session_state:
+#     st.session_state.latest_response = None
 
-# --- Query Input Section ---
-st.markdown("### 💬 Ask Your Question")
+# # --- Query Input Section ---
+# st.markdown("### 💬 Ask Your Question")
 
-# Sample questions for better UX
-sample_questions = [
-    "What are the key initiatives under Digital India?",
-    "Tell me about MeitY's cybersecurity policies",
-    "What is the National AI Portal about?",
-    "Explain the IT Act amendments",
-    "What are the recent updates in electronics manufacturing policy?"
-]
+# # Sample questions for better UX
+# sample_questions = [
+#     "What are the key initiatives under Digital India?",
+#     "Tell me about MeitY's cybersecurity policies",
+#     "What is the National AI Portal about?",
+#     "Explain the IT Act amendments",
+#     "What are the recent updates in electronics manufacturing policy?"
+# ]
 
-# Quick question buttons
-st.markdown("**Quick Questions:**")
-cols = st.columns(3)
-for i, question in enumerate(sample_questions[:3]):
-    with cols[i]:
-        if st.button(f"📝 {question[:30]}...", key=f"sample_{i}", help=question):
-            st.session_state.sample_question = question
+# # Quick question buttons
+# st.markdown("**Quick Questions:**")
+# cols = st.columns(3)
+# for i, question in enumerate(sample_questions[:3]):
+#     with cols[i]:
+#         if st.button(f"📝 {question[:30]}...", key=f"sample_{i}", help=question):
+#             st.session_state.sample_question = question
 
-# Handle sample question selection
-if 'sample_question' in st.session_state:
-    query_text = st.session_state.sample_question
-    del st.session_state.sample_question
-else:
-    query_text = st.text_area(
-        "Enter your question about MeitY, Digital India, or related policies:",
-        height=120,
-        placeholder="Example: What are the main objectives of the National Digital Communications Policy?",
-        help="Ask questions about Ministry of Electronics and IT policies, initiatives, or digital governance topics."
-    )
+# # Handle sample question selection
+# if 'sample_question' in st.session_state:
+#     query_text = st.session_state.sample_question
+#     del st.session_state.sample_question
+# else:
+#     query_text = st.text_area(
+#         "Enter your question about MeitY, Digital India, or related policies:",
+#         height=120,
+#         placeholder="Example: What are the main objectives of the National Digital Communications Policy?",
+#         help="Ask questions about Ministry of Electronics and IT policies, initiatives, or digital governance topics."
+#     )
 
-# Submit button
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    submitted = st.button("🔍 Get Answer", type="primary", use_container_width=True)
+# # Submit button
+# col1, col2, col3 = st.columns([1, 2, 1])
+# with col2:
+#     submitted = st.button("🔍 Get Answer", type="primary", use_container_width=True)
 
-# Process query
-if submitted and query_text:
-    st.session_state.latest_query = query_text
-    st.session_state.query_count += 1
+# # Process query
+# if submitted and query_text:
+#     st.session_state.latest_query = query_text
+#     st.session_state.query_count += 1
     
-    # Show processing status
-    with st.spinner("🔍 Searching knowledge base..."):
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+#     # Show processing status
+#     with st.spinner("🔍 Searching knowledge base..."):
+#         progress_bar = st.progress(0)
+#         status_text = st.empty()
         
-        # Simulate progress updates
-        import time
-        for i, status in enumerate([
-            "Checking local documents...",
-            "Searching web content...", 
-            "Analyzing video transcripts...",
-            "Generating response..."
-        ]):
-            status_text.text(status)
-            progress_bar.progress((i + 1) * 25)
-            if i < 3:
-                time.sleep(0.5)
+#         # Simulate progress updates
+#         import time
+#         for i, status in enumerate([
+#             "Checking local documents...",
+#             "Searching web content...", 
+#             "Analyzing video transcripts...",
+#             "Generating response..."
+#         ]):
+#             status_text.text(status)
+#             progress_bar.progress((i + 1) * 25)
+#             if i < 3:
+#                 time.sleep(0.5)
         
-        # Get the actual answer
-        try:
-            response = get_answer(query_text)
-            st.session_state.latest_response = response
-            progress_bar.progress(100)
-            status_text.text("✅ Complete!")
+#         # Get the actual answer
+#         try:
+#             response = get_answer(query_text)
+#             st.session_state.latest_response = response
+#             progress_bar.progress(100)
+#             status_text.text("✅ Complete!")
             
-            # Log technical details in backend (for monitoring)
-            logger.info(f"Query processed successfully:")
-            logger.info(f"  - Search Method: {response.get('search_method', 'unknown')}")
-            logger.info(f"  - Tier: {response.get('tier', 'unknown')}")
-            logger.info(f"  - Sources Found: {len(response.get('source_documents', []))}")
-            if response.get('similarity_scores'):
-                scores = response.get('similarity_scores', [])
-                logger.info(f"  - Score Range: {min(scores):.3f} - {max(scores):.3f}")
+#             # Log technical details in backend (for monitoring)
+#             logger.info(f"Query processed successfully:")
+#             logger.info(f"  - Search Method: {response.get('search_method', 'unknown')}")
+#             logger.info(f"  - Tier: {response.get('tier', 'unknown')}")
+#             logger.info(f"  - Sources Found: {len(response.get('source_documents', []))}")
+#             if response.get('similarity_scores'):
+#                 scores = response.get('similarity_scores', [])
+#                 logger.info(f"  - Score Range: {min(scores):.3f} - {max(scores):.3f}")
             
-            time.sleep(0.5)
-        except Exception as e:
-            logger.error(f"Error processing query: {e}")
-            st.session_state.latest_response = {
-                "answer": f"An error occurred while processing your query: {str(e)}",
-                "source_documents": [],
-                "tier": "Error",
-                "search_method": "error"
-            }
-        finally:
-            progress_bar.empty()
-            status_text.empty()
+#             time.sleep(0.5)
+#         except Exception as e:
+#             logger.error(f"Error processing query: {e}")
+#             st.session_state.latest_response = {
+#                 "answer": f"An error occurred while processing your query: {str(e)}",
+#                 "source_documents": [],
+#                 "tier": "Error",
+#                 "search_method": "error"
+#             }
+#         finally:
+#             progress_bar.empty()
+#             status_text.empty()
 
-# --- Display Response ---
-if st.session_state.latest_response:
-    st.markdown("---")
+# # --- Display Response ---
+# if st.session_state.latest_response:
+#     st.markdown("---")
     
-    # Query Display
-    st.markdown(f"""
-    <div class="query-display">
-        <strong>🔍 Your Question:</strong> {st.session_state.latest_query}
-    </div>
-    """, unsafe_allow_html=True)
+#     # Query Display
+#     st.markdown(f"""
+#     <div class="query-display">
+#         <strong>🔍 Your Question:</strong> {st.session_state.latest_query}
+#     </div>
+#     """, unsafe_allow_html=True)
     
-    response_data = st.session_state.latest_response
-    answer_text = response_data.get("answer", "No answer generated.")
+#     response_data = st.session_state.latest_response
+#     answer_text = response_data.get("answer", "No answer generated.")
     
-    # Display Answer (Clean, no technical details)
-    st.markdown("### 📋 Answer")
-    st.markdown(f"""
-    <div class="answer-container">
-        {answer_text.replace(chr(10), '<br>')}
-    </div>
-    """, unsafe_allow_html=True)
+#     # Display Answer (Clean, no technical details)
+#     st.markdown("### 📋 Answer")
+#     st.markdown(f"""
+#     <div class="answer-container">
+#         {answer_text.replace(chr(10), '<br>')}
+#     </div>
+#     """, unsafe_allow_html=True)
 
-    # Display Top 5 Sources (Clean display)
-    source_docs = response_data.get("source_documents", [])
+#     # Display Top 5 Sources (Clean display)
+#     source_docs = response_data.get("source_documents", [])
     
-    if source_docs:
-        # Always show how many sources we have
-        total_sources = len(source_docs)
-        display_sources = min(5, total_sources)
+#     if source_docs:
+#         # Always show how many sources we have
+#         total_sources = len(source_docs)
+#         display_sources = min(5, total_sources)
         
-        st.markdown(f"### 📚 Sources & References ({display_sources} of {total_sources})")
+#         st.markdown(f"### 📚 Sources & References ({display_sources} of {total_sources})")
         
-        # Ensure we show up to 5 sources
-        top_sources = source_docs[:5]
+#         # Ensure we show up to 5 sources
+#         top_sources = source_docs[:5]
         
-        # Display each source with proper indexing
-        for i, doc in enumerate(top_sources):
-            source_info = format_source_display(doc, i)
+#         # Display each source with proper indexing
+#         for i, doc in enumerate(top_sources):
+#             source_info = format_source_display(doc, i)
             
-            # Create expandable source card for better organization
-            with st.expander(f"📋 Source {i + 1}: {source_info['type']} - {source_info['name']}", expanded=True):
-                st.markdown(f"""
-                <div class="source-card">
-                    <p><strong>Content Preview:</strong></p>
-                    <p style="font-style: italic; color: #a0a0a0;">{source_info['content_preview']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+#             # Create expandable source card for better organization
+#             with st.expander(f"📋 Source {i + 1}: {source_info['type']} - {source_info['name']}", expanded=True):
+#                 st.markdown(f"""
+#                 <div class="source-card">
+#                     <p><strong>Content Preview:</strong></p>
+#                     <p style="font-style: italic; color: #a0a0a0;">{source_info['content_preview']}</p>
+#                 </div>
+#                 """, unsafe_allow_html=True)
                 
-                # Add download/view options
-                col1, col2 = st.columns([1, 1])
+#                 # Add download/view options
+#                 col1, col2 = st.columns([1, 1])
                 
-                with col1:
-                    # For local files, provide download
-                    if os.path.exists(source_info['full_source']):
-                        try:
-                            with open(source_info['full_source'], "rb") as f:
-                                file_data = f.read()
+#                 with col1:
+#                     # For local files, provide download
+#                     if os.path.exists(source_info['full_source']):
+#                         try:
+#                             with open(source_info['full_source'], "rb") as f:
+#                                 file_data = f.read()
                             
-                            st.download_button(
-                                label=f"📥 Download Document",
-                                data=file_data,
-                                file_name=os.path.basename(source_info['full_source']),
-                                key=f"download_{i}",
-                                help=f"Download: {source_info['name']}"
-                            )
-                        except Exception as e:
-                            st.error(f"Unable to load file: {str(e)[:50]}...")
+#                             st.download_button(
+#                                 label=f"📥 Download Document",
+#                                 data=file_data,
+#                                 file_name=os.path.basename(source_info['full_source']),
+#                                 key=f"download_{i}",
+#                                 help=f"Download: {source_info['name']}"
+#                             )
+#                         except Exception as e:
+#                             st.error(f"Unable to load file: {str(e)[:50]}...")
                 
-                with col2:
-                    # For web sources, provide link
-                    if source_info['full_source'].startswith('http'):
-                        st.markdown(f"[🔗 View Online Source]({source_info['full_source']})")
-                    elif not os.path.exists(source_info['full_source']):
-                        st.info("📍 Internal Knowledge Base Reference")
+#                 with col2:
+#                     # For web sources, provide link
+#                     if source_info['full_source'].startswith('http'):
+#                         st.markdown(f"[🔗 View Online Source]({source_info['full_source']})")
+#                     elif not os.path.exists(source_info['full_source']):
+#                         st.info("📍 Internal Knowledge Base Reference")
         
-        # Show summary of sources found
-        if total_sources > 5:
-            st.info(f"ℹ️ Showing top 5 most relevant sources. Total {total_sources} sources were found in the knowledge base.")
-        else:
-            st.success(f"✅ All {total_sources} relevant sources are displayed above.")
+#         # Show summary of sources found
+#         if total_sources > 5:
+#             st.info(f"ℹ️ Showing top 5 most relevant sources. Total {total_sources} sources were found in the knowledge base.")
+#         else:
+#             st.success(f"✅ All {total_sources} relevant sources are displayed above.")
     
-    else:
-        st.warning("⚠️ No source documents were found or returned. This might indicate an issue with the search system or that the query couldn't be matched to any content in the knowledge base.")
+#     else:
+#         st.warning("⚠️ No source documents were found or returned. This might indicate an issue with the search system or that the query couldn't be matched to any content in the knowledge base.")
     
-    # Add query to chat history (simplified)
-    st.session_state.chat_history.append({
-        "timestamp": datetime.now(),
-        "query": st.session_state.latest_query,
-        "answer_preview": answer_text[:100] + "..." if len(answer_text) > 100 else answer_text,
-        "source_count": len(source_docs)
-    })
+#     # Add query to chat history (simplified)
+#     st.session_state.chat_history.append({
+#         "timestamp": datetime.now(),
+#         "query": st.session_state.latest_query,
+#         "answer_preview": answer_text[:100] + "..." if len(answer_text) > 100 else answer_text,
+#         "source_count": len(source_docs)
+#     })
 
-# --- Chat History ---
-if st.session_state.chat_history:
-    with st.expander("📜 Recent Queries", expanded=False):
-        for i, entry in enumerate(reversed(st.session_state.chat_history[-5:])):  # Show last 5
-            st.markdown(f"""
-            **{entry['timestamp'].strftime('%H:%M:%S')}** - *{entry['query'][:100]}{'...' if len(entry['query']) > 100 else ''}*
+# # --- Chat History ---
+# if st.session_state.chat_history:
+#     with st.expander("📜 Recent Queries", expanded=False):
+#         for i, entry in enumerate(reversed(st.session_state.chat_history[-5:])):  # Show last 5
+#             st.markdown(f"""
+#             **{entry['timestamp'].strftime('%H:%M:%S')}** - *{entry['query'][:100]}{'...' if len(entry['query']) > 100 else ''}*
             
-            *{entry['answer_preview']}*
-            """)
-            st.markdown("---")
+#             *{entry['answer_preview']}*
+#             """)
+#             st.markdown("---")
 
-# --- Footer ---
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #666; padding: 2rem;">
-    <p>🇮🇳 <strong>MeitY Knowledge Base AI Agent</strong></p>
-    <p>Powered by Advanced RAG Technology | Built for Ministry of Electronics and IT</p>
-    <p><em>This system provides information based on official documents, websites, and multimedia content.</em></p>
-</div>
-""", unsafe_allow_html=True)
+# # --- Footer ---
+# st.markdown("---")
+# st.markdown("""
+# <div style="text-align: center; color: #666; padding: 2rem;">
+#     <p>🇮🇳 <strong>MeitY Knowledge Base AI Agent</strong></p>
+#     <p>Powered by Advanced RAG Technology | Built for Ministry of Electronics and IT</p>
+#     <p><em>This system provides information based on official documents, websites, and multimedia content.</em></p>
+# </div>
+# """, unsafe_allow_html=True)
