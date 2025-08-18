@@ -663,7 +663,7 @@ def format_source_display(doc, index):
 
 def find_document_file(source_path):
     """
-    Try to find the document file in various possible locations for Azure deployment
+    Enhanced function to find document files in Azure deployment with better path resolution
     """
     if not source_path:
         return None
@@ -679,35 +679,49 @@ def find_document_file(source_path):
     logger.info(f"Current working directory: {current_dir}")
     logger.info(f"Looking for file: {filename} (original path: {source_path})")
     
-    # Possible locations where documents might be stored in Azure
+    # Enhanced possible locations for Azure deployment
     possible_paths = [
         source_path,  # Original path
         filename,  # Just filename in current directory
-        os.path.join("documents", filename),  # documents folder
-        os.path.join("data", filename),  # data folder
-        os.path.join("persistent_storage", "documents", filename),  # persistent storage
-        os.path.join("backend", "documents", filename),  # backend documents
-        os.path.join("/tmp", filename),  # tmp directory
-        os.path.join(".", "documents", filename),  # relative documents
-        os.path.join(current_dir, "documents", filename),  # absolute documents
-        os.path.join(current_dir, filename),  # current dir + filename
-        # Add more Azure-specific paths
-        os.path.join("/home", "site", "wwwroot", "documents", filename),
-        os.path.join("/app", "documents", filename),
-        os.path.join("persistent_storage", filename),
-        # Try with source_documents folder structure
+        
+        # Local structure paths
+        os.path.join("documents", filename),
+        os.path.join("data", filename),
         os.path.join("source_documents", filename),
+        os.path.join("persistent_storage", filename),
+        os.path.join("persistent_storage", "documents", filename),
         os.path.join("persistent_storage", "source_documents", filename),
+        os.path.join("backend", "documents", filename),
+        
+        # Azure specific paths
+        os.path.join("/tmp", filename),
+        os.path.join("/home", "site", "wwwroot", filename),
+        os.path.join("/home", "site", "wwwroot", "documents", filename),
+        os.path.join("/home", "site", "wwwroot", "source_documents", filename),
+        os.path.join("/app", filename),
+        os.path.join("/app", "documents", filename),
+        os.path.join("/app", "source_documents", filename),
+        
+        # Relative paths
+        os.path.join(".", "documents", filename),
+        os.path.join(".", "source_documents", filename),
+        os.path.join(current_dir, filename),
+        os.path.join(current_dir, "documents", filename),
+        os.path.join(current_dir, "source_documents", filename),
     ]
     
-    # Also check if the filename contains path separators and try extracting just the name
+    # Handle complex filenames with path separators
     if "/" in filename or "\\" in filename:
         clean_filename = filename.split("/")[-1].split("\\")[-1]
+        additional_paths = []
         for base_path in ["", "documents", "data", "persistent_storage", "source_documents"]:
             if base_path:
-                possible_paths.append(os.path.join(base_path, clean_filename))
+                additional_paths.append(os.path.join(base_path, clean_filename))
+                additional_paths.append(os.path.join(current_dir, base_path, clean_filename))
             else:
-                possible_paths.append(clean_filename)
+                additional_paths.append(clean_filename)
+                additional_paths.append(os.path.join(current_dir, clean_filename))
+        possible_paths.extend(additional_paths)
     
     # Check each possible path
     for path in possible_paths:
@@ -721,31 +735,59 @@ def find_document_file(source_path):
             logger.debug(f"Error checking path {path}: {e}")
             continue
     
-    # If still not found, list current directory contents for debugging
+    # Enhanced directory listing for debugging
     try:
-        logger.info(f"Directory contents of {current_dir}:")
+        logger.info(f"=== Directory Analysis ===")
+        logger.info(f"Current directory: {current_dir}")
+        logger.info(f"Contents of {current_dir}:")
         for item in os.listdir(current_dir):
-            logger.info(f"  - {item}")
-            
-        # Also check if documents folder exists
-        docs_path = os.path.join(current_dir, "documents")
-        if os.path.exists(docs_path):
-            logger.info(f"Contents of documents folder:")
-            for item in os.listdir(docs_path):
-                logger.info(f"  - documents/{item}")
-                
-        # Check persistent_storage folder
-        persistent_path = os.path.join(current_dir, "persistent_storage")
-        if os.path.exists(persistent_path):
-            logger.info(f"Contents of persistent_storage folder:")
-            for item in os.listdir(persistent_path):
-                logger.info(f"  - persistent_storage/{item}")
+            item_path = os.path.join(current_dir, item)
+            if os.path.isdir(item_path):
+                logger.info(f"  📁 {item}/")
+                try:
+                    sub_items = os.listdir(item_path)[:5]  # First 5 items
+                    for sub_item in sub_items:
+                        logger.info(f"    - {sub_item}")
+                    if len(os.listdir(item_path)) > 5:
+                        logger.info(f"    ... and {len(os.listdir(item_path)) - 5} more items")
+                except Exception as e:
+                    logger.info(f"    (Error reading directory: {e})")
+            else:
+                logger.info(f"  📄 {item}")
                 
     except Exception as e:
         logger.error(f"Error listing directory contents: {e}")
     
     logger.warning(f"❌ Could not find document file for: {source_path}")
     return None
+
+def try_read_file_content(file_path):
+    """
+    Try to read file content with multiple encoding attempts
+    """
+    encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+    
+    for encoding in encodings:
+        try:
+            with open(file_path, 'r', encoding=encoding) as f:
+                content = f.read()
+                logger.info(f"Successfully read file with {encoding} encoding")
+                return content
+        except UnicodeDecodeError:
+            continue
+        except Exception as e:
+            logger.error(f"Error reading file with {encoding}: {e}")
+            break
+    
+    # If text reading fails, try binary mode for download
+    try:
+        with open(file_path, 'rb') as f:
+            content = f.read()
+            logger.info(f"Read file in binary mode")
+            return content
+    except Exception as e:
+        logger.error(f"Error reading file in binary mode: {e}")
+        return None
 
 # --- Sidebar (Keep Original) ---
 with st.sidebar:
@@ -910,7 +952,7 @@ if st.session_state.latest_response:
     </div>
     """, unsafe_allow_html=True)
 
-    # Display Top 5 Sources (Clean display)
+    # Display Top 5 Sources (Clean display with FIXED download logic)
     source_docs = response_data.get("source_documents", [])
     
     if source_docs:
@@ -923,7 +965,7 @@ if st.session_state.latest_response:
         # Ensure we show up to 5 sources
         top_sources = source_docs[:5]
         
-        # Display each source with proper indexing
+        # Display each source with proper indexing and IMPROVED download logic
         for i, doc in enumerate(top_sources):
             source_info = format_source_display(doc, i)
             
@@ -936,32 +978,73 @@ if st.session_state.latest_response:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Add download/view options
+                # FIXED: Add download/view options with better file detection
                 col1, col2 = st.columns([1, 1])
                 
                 with col1:
-                    # For local files, provide download
-                    if os.path.exists(source_info['full_source']):
+                    # Try to find the document file using enhanced search
+                    found_file_path = find_document_file(source_info['full_source'])
+                    
+                    # ALTERNATIVE: Also try direct path checking
+                    if not found_file_path and not source_info['full_source'].startswith('http'):
+                        # Try some additional common paths specific to your setup
+                        alternative_paths = [
+                            source_info['full_source'],
+                            os.path.join("source_documents", os.path.basename(source_info['full_source'])),
+                            os.path.join("persistent_storage", "source_documents", os.path.basename(source_info['full_source'])),
+                        ]
+                        
+                        for alt_path in alternative_paths:
+                            try:
+                                if os.path.exists(alt_path) and os.path.isfile(alt_path):
+                                    found_file_path = alt_path
+                                    logger.info(f"Found file via alternative path: {alt_path}")
+                                    break
+                            except Exception as e:
+                                continue
+                    
+                    # Show download button if file is found
+                    if found_file_path:
                         try:
-                            with open(source_info['full_source'], "rb") as f:
-                                file_data = f.read()
+                            # Try to read the file
+                            file_content = try_read_file_content(found_file_path)
                             
-                            st.download_button(
-                                label=f"📥 Download Document",
-                                data=file_data,
-                                file_name=os.path.basename(source_info['full_source']),
-                                key=f"download_{i}",
-                                help=f"Download: {source_info['name']}"
-                            )
+                            if file_content:
+                                # Determine if content is text or binary
+                                if isinstance(file_content, str):
+                                    file_data = file_content.encode('utf-8')
+                                else:
+                                    file_data = file_content
+                                
+                                st.download_button(
+                                    label=f"📥 Download Document",
+                                    data=file_data,
+                                    file_name=os.path.basename(found_file_path),
+                                    key=f"download_{i}",
+                                    help=f"Download: {source_info['name']}"
+                                )
+                                logger.info(f"Download button created for: {found_file_path}")
+                            else:
+                                st.error("❌ File found but couldn't read content")
+                                
                         except Exception as e:
-                            st.error(f"Unable to load file: {str(e)[:50]}...")
+                            logger.error(f"Error preparing download for {found_file_path}: {e}")
+                            st.error(f"❌ Error accessing file: {str(e)[:50]}...")
+                    else:
+                        # Show informational message instead of download button
+                        if source_info['full_source'].startswith('http'):
+                            st.info("🌐 Web source - see link below")
+                        else:
+                            st.warning("📍 File not accessible for download")
+                            logger.warning(f"File not found for download: {source_info['full_source']}")
                 
                 with col2:
                     # For web sources, provide link
                     if source_info['full_source'].startswith('http'):
                         st.markdown(f"[🔗 View Online Source]({source_info['full_source']})")
-                    elif not os.path.exists(source_info['full_source']):
-                        st.info("📍 Internal Knowledge Base Reference")
+                    else:
+                        # For local files, show the source path for debugging
+                        st.code(f"Source: {source_info['full_source']}", language=None)
         
         # Show summary of sources found
         if total_sources > 5:
