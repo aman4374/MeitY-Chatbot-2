@@ -664,6 +664,7 @@ def format_source_display(doc, index):
 def find_document_file(source_path):
     """
     Enhanced function to find document files in Azure deployment with better path resolution
+    Fixed for Windows/Linux path separator issues
     """
     if not source_path:
         return None
@@ -671,18 +672,30 @@ def find_document_file(source_path):
     # If it's a web URL, return None
     if source_path.startswith('http'):
         return None
-        
-    filename = os.path.basename(source_path)
+    
+    # CRITICAL FIX: Normalize path separators for cross-platform compatibility
+    # Convert Windows backslashes to forward slashes for Linux/Azure
+    normalized_path = source_path.replace('\\', '/')
+    filename = os.path.basename(normalized_path)
     
     # Get current working directory for debugging
     current_dir = os.getcwd()
     logger.info(f"Current working directory: {current_dir}")
-    logger.info(f"Looking for file: {filename} (original path: {source_path})")
+    logger.info(f"Original path: {source_path}")
+    logger.info(f"Normalized path: {normalized_path}")
+    logger.info(f"Looking for file: {filename}")
     
     # Enhanced possible locations for Azure deployment
     possible_paths = [
-        source_path,  # Original path
-        filename,  # Just filename in current directory
+        # Try original paths (both versions)
+        source_path,
+        normalized_path,
+        
+        # Just filename in various locations
+        filename,
+        
+        # Direct path reconstruction from normalized path
+        normalized_path if not normalized_path.startswith('/') else normalized_path[1:],
         
         # Local structure paths
         os.path.join("documents", filename),
@@ -708,19 +721,44 @@ def find_document_file(source_path):
         os.path.join(current_dir, filename),
         os.path.join(current_dir, "documents", filename),
         os.path.join(current_dir, "source_documents", filename),
+        
+        # IMPORTANT: Try the exact structure from your Azure storage
+        # Based on your screenshot showing source_documents\ paths
+        os.path.join("source_documents", filename),
+        os.path.join("./source_documents", filename),
+        os.path.join(current_dir, "source_documents", filename),
     ]
     
-    # Handle complex filenames with path separators
-    if "/" in filename or "\\" in filename:
-        clean_filename = filename.split("/")[-1].split("\\")[-1]
+    # Handle path separators - BOTH Windows and Linux style
+    if "/" in source_path or "\\" in source_path:
+        # Extract just the filename from complex paths
+        clean_filename = source_path.split("/")[-1].split("\\")[-1]
+        
+        # Try to reconstruct the path structure
+        path_parts = normalized_path.split("/")
+        if len(path_parts) > 1:
+            # Try different combinations of the path parts
+            for i in range(len(path_parts)):
+                partial_path = "/".join(path_parts[i:])
+                possible_paths.extend([
+                    partial_path,
+                    os.path.join(current_dir, partial_path),
+                    os.path.join(".", partial_path)
+                ])
+        
         additional_paths = []
         for base_path in ["", "documents", "data", "persistent_storage", "source_documents"]:
             if base_path:
-                additional_paths.append(os.path.join(base_path, clean_filename))
-                additional_paths.append(os.path.join(current_dir, base_path, clean_filename))
+                additional_paths.extend([
+                    os.path.join(base_path, clean_filename),
+                    os.path.join(current_dir, base_path, clean_filename),
+                    os.path.join(".", base_path, clean_filename)
+                ])
             else:
-                additional_paths.append(clean_filename)
-                additional_paths.append(os.path.join(current_dir, clean_filename))
+                additional_paths.extend([
+                    clean_filename,
+                    os.path.join(current_dir, clean_filename)
+                ])
         possible_paths.extend(additional_paths)
     
     # Check each possible path
@@ -985,22 +1023,45 @@ if st.session_state.latest_response:
                     # Try to find the document file using enhanced search
                     found_file_path = find_document_file(source_info['full_source'])
                     
-                    # ALTERNATIVE: Also try direct path checking
+                    # ENHANCED ALTERNATIVE: Also try direct path checking with path separator fixes
                     if not found_file_path and not source_info['full_source'].startswith('http'):
-                        # Try some additional common paths specific to your setup
+                        # CRITICAL: Fix path separator issues for Windows -> Linux deployment
+                        original_path = source_info['full_source']
+                        normalized_path = original_path.replace('\\', '/')
+                        filename = os.path.basename(normalized_path)
+                        
+                        # Try specific paths based on your file structure
                         alternative_paths = [
-                            source_info['full_source'],
-                            os.path.join("source_documents", os.path.basename(source_info['full_source'])),
-                            os.path.join("persistent_storage", "source_documents", os.path.basename(source_info['full_source'])),
+                            # Original paths
+                            original_path,
+                            normalized_path,
+                            
+                            # Direct file access attempts
+                            filename,
+                            
+                            # Based on your Azure storage structure
+                            os.path.join("source_documents", filename),
+                            os.path.join("./source_documents", filename),
+                            os.path.join(os.getcwd(), "source_documents", filename),
+                            
+                            # Try the normalized path directly
+                            normalized_path if not normalized_path.startswith('/') else normalized_path[1:],
+                            
+                            # Persistent storage paths
+                            os.path.join("persistent_storage", "source_documents", filename),
+                            os.path.join("persistent_storage", filename),
                         ]
                         
                         for alt_path in alternative_paths:
                             try:
                                 if os.path.exists(alt_path) and os.path.isfile(alt_path):
                                     found_file_path = alt_path
-                                    logger.info(f"Found file via alternative path: {alt_path}")
+                                    logger.info(f"✅ Found file via alternative path: {alt_path}")
                                     break
+                                else:
+                                    logger.debug(f"❌ Alternative path not found: {alt_path}")
                             except Exception as e:
+                                logger.debug(f"Error checking alternative path {alt_path}: {e}")
                                 continue
                     
                     # Show download button if file is found
@@ -1036,7 +1097,31 @@ if st.session_state.latest_response:
                             st.info("🌐 Web source - see link below")
                         else:
                             st.warning("📍 File not accessible for download")
+                            
+                            # DEBUG SECTION - Show what we tried to find
+                            with st.expander("🔧 Debug Info", expanded=False):
+                                st.write("**Original path:**", source_info['full_source'])
+                                st.write("**Normalized path:**", source_info['full_source'].replace('\\', '/'))
+                                st.write("**Filename:**", os.path.basename(source_info['full_source']))
+                                
+                                # Show current working directory
+                                st.write("**Current directory:**", os.getcwd())
+                                
+                                # Show if source_documents directory exists
+                                source_docs_path = os.path.join(os.getcwd(), "source_documents")
+                                if os.path.exists(source_docs_path):
+                                    st.write("✅ **source_documents directory exists**")
+                                    try:
+                                        files_in_dir = os.listdir(source_docs_path)[:10]  # First 10 files
+                                        st.write("**Files in source_documents:**", files_in_dir)
+                                    except Exception as e:
+                                        st.write("❌ **Error reading source_documents:**", str(e))
+                                else:
+                                    st.write("❌ **source_documents directory not found**")
+                                
                             logger.warning(f"File not found for download: {source_info['full_source']}")
+                            logger.info(f"Normalized path attempted: {source_info['full_source'].replace('\\', '/')}")
+                            logger.info(f"Filename extracted: {os.path.basename(source_info['full_source'])}")
                 
                 with col2:
                     # For web sources, provide link
