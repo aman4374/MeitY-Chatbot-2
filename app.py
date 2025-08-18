@@ -591,6 +591,8 @@ def find_document_file(source_path):
     logger.info(f"Normalized path: {normalized_path}")
     logger.info(f"Looking for file: {filename}")
     
+    persistent_storage_path = os.getenv("PERSISTENT_STORAGE_PATH", "/persistent_storage")
+
     possible_paths = [
         source_path,
         normalized_path,
@@ -599,7 +601,10 @@ def find_document_file(source_path):
         os.path.join("source_documents", filename),
         os.path.join(".", "source_documents", filename),
         os.path.join(current_dir, "source_documents", filename),
+        os.path.join(persistent_storage_path, "source_documents", filename),
+        os.path.join(current_dir, persistent_storage_path.strip("/"), "source_documents", filename),
     ]
+
     
     for path in possible_paths:
         try:
